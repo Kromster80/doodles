@@ -73,7 +73,7 @@ end;
 procedure TForm1.FormResize(Sender: TObject);
 begin
   if fRender=nil then exit;
-  fRender.SetArea(Width,Height);
+  fRender.SetArea(ClientWidth, ClientHeight);
 end;
 
 
