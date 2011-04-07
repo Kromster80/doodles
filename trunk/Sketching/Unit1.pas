@@ -10,7 +10,8 @@ type
     procedure FormResize(Sender: TObject);
     procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-    procedure FormClick(Sender: TObject);
+    procedure FormMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   private
     procedure OnIdle(Sender: TObject; var Done: Boolean);
   end;
@@ -21,6 +22,7 @@ const
 var
   Form1: TForm1;
   ExeDir:string;
+  fPaused:Boolean;
 
   OldTimeFPS,OldFrameTimes,FrameTime,FrameCount:cardinal;
 
@@ -58,6 +60,7 @@ begin //Counting FPS
     OldFrameTimes:=0; FrameCount:=0;
   end; //FPS calculation complete
 
+  if not fPaused then
   fRender.Render;
   Done := false;
 end;
@@ -89,9 +92,11 @@ begin
 end;
 
 
-procedure TForm1.FormClick(Sender: TObject);
+procedure TForm1.FormMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  fObjectCollection.Change;
+  if Button = mbLeft then fObjectCollection.Change;
+  if Button = mbRight then fRender.ChangeBackground;
+  if Button = mbMiddle then fPaused := not fPaused;
 end;
 
 
