@@ -11,6 +11,7 @@ type
       xOld,yOld:integer;
       xRot,yRot:single;
       fAreaX,fAreaY:integer;
+      fBackColor:single;
     public
       constructor Create(RenderFrame:HWND; InX,InY:integer);
       destructor Destroy; override;
@@ -19,6 +20,7 @@ type
       procedure MouseMove(Shift: TShiftState; X, Y: Integer);
 
       procedure SetArea(InX,InY:integer);
+      procedure ChangeBackground;
       procedure RenderResize;
       procedure Render;
     end;
@@ -80,6 +82,12 @@ begin
 end;
 
 
+procedure TRender.ChangeBackground;
+begin
+  fBackColor := 1 - fBackColor;
+end;
+
+
 procedure TRender.RenderResize;
 begin
   glViewport(0, 0, fAreaX, fAreaY);
@@ -97,7 +105,7 @@ begin
   glLoadIdentity;
   glTranslatef(0,0,-1.1);
 
-  glColor4f(0,0,0,0.125);
+  glColor4f(fBackColor,fBackColor,fBackColor,0.125);
   glRect(-100, 100, 100, -100); //Make sure to cover whole screen
 
   glScalef(0.01,0.01,0.01);

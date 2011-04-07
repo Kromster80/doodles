@@ -13,11 +13,11 @@ object Form1: TForm1
   KeyPreview = True
   OldCreateOrder = False
   Position = poScreenCenter
-  OnClick = FormClick
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnMouseDown = FormMouseDown
   OnMouseMove = FormMouseMove
+  OnMouseUp = FormMouseUp
   OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 13
