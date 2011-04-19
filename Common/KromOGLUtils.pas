@@ -76,7 +76,7 @@ begin
   ReadImplementationProperties;
 end;
 
-procedure SetRenderDefaults();
+procedure SetRenderDefaults;
 begin
   glClearColor(0, 0, 0, 0); 	   //Background
   glClear (GL_COLOR_BUFFER_BIT);
