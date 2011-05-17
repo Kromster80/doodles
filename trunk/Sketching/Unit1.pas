@@ -1,17 +1,17 @@
 unit Unit1;
 interface
 uses
-  Classes, Controls, Forms, Math, SysUtils, Windows;
+  Classes, Controls, Forms, Math, SysUtils, Windows, ExtCtrls;
 
 type
   TForm1 = class(TForm)
+    Panel1: TPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-    procedure FormMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
+    procedure FormMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     procedure OnIdle(Sender: TObject; var Done: Boolean);
   end;
@@ -38,7 +38,7 @@ begin
 
   ExeDir := ExtractFilePath(Application.ExeName);
 
-  fRender := TRender.Create(Handle, ClientWidth, ClientHeight);
+  fRender := TRender.Create(Panel1.Handle, Handle, ClientWidth, ClientHeight);
   fObjectCollection := TKObjectCollection.Create;
 
   Application.OnIdle := OnIdle;

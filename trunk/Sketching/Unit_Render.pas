@@ -13,7 +13,7 @@ type
       fAreaX,fAreaY:integer;
       fBackColor:single;
     public
-      constructor Create(RenderFrame:HWND; InX,InY:integer);
+      constructor Create(DummyRender, RenderFrame:HWND; InX,InY:integer);
       destructor Destroy; override;
 
       procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -34,9 +34,9 @@ implementation
 uses Unit_Objects;
 
 
-constructor TRender.Create(RenderFrame:HWND; InX,InY:integer);
+constructor TRender.Create(DummyRender, RenderFrame:HWND; InX,InY:integer);
 begin
-  SetRenderFrame(RenderFrame, h_DC, h_RC);
+  SetRenderFrameAA(DummyRender, RenderFrame, 16, h_DC, h_RC);
   SetRenderDefaults;
   SetArea(InX,InY);
 
