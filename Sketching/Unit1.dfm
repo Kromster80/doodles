@@ -21,4 +21,13 @@ object Form1: TForm1
   OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 13
+  object Panel1: TPanel
+    Left = 0
+    Top = 0
+    Width = 185
+    Height = 41
+    Caption = 'Panel1'
+    TabOrder = 0
+    Visible = False
+  end
 end
