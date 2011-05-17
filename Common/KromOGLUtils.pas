@@ -3,9 +3,9 @@ unit KromOGLUtils;
 {$IFDEF VER150} {$DEFINE WDC} {$ENDIF}  // Delphi 7
 interface
 uses
-  {$IFDEF WDC} OpenGL, {$ENDIF}  dglOpenGL,
+  dglOpenGL,
   {$IFDEF FPC} GL, {$ENDIF}
-  sysutils, windows, Forms, KromUtils;
+  SysUtils, Windows, Forms, KromUtils;
 
 type KCode = (kNil=0,kPoint=1,kSpline=2,kSplineAnchor=3,kSplineAnchorLength=4,
               kPoly=5,kSurface=6,kObject=7,kButton=8);  //1..31 are ok
@@ -298,15 +298,15 @@ begin
   glReadPixels(vx, vy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, @vz);
 
   if vz=1 then begin
-  Result.x:=0;
-  Result.y:=0;
-  Result.z:=0;
+    Result.x:=1000000; //Something out of working range
+    Result.y:=0;
+    Result.z:=0;
   end else begin
-  //This function uses OpenGL parameters, not dglOpenGL
-  gluUnProject(vx, vy, vz, modelview, projection, viewport, @wx, @wy, @wz);
-  Result.x:=wx;
-  Result.y:=wy;
-  Result.z:=wz;
+    //This function uses OpenGL parameters, not dglOpenGL
+    gluUnProject(vx, vy, vz, modelview, projection, viewport, @wx, @wy, @wz);
+    Result.x:=wx;
+    Result.y:=wy;
+    Result.z:=wz;
   end;
 end;
 
