@@ -158,10 +158,13 @@ begin
     glBegin(GL_LINES);
       glColor3f(1, 0, 0);
       glVertex3f(-1, 0, 0); glVertex3f(1, 0, 0);
+      glVertex3f(0.95, 0, -0.05); glVertex3f(0.95, 0, 0.05);
       glColor3f(0, 1, 0);
       glVertex3f(0, -1, 0); glVertex3f(0, 1, 0);
+      glVertex3f(0, 0.95, -0.05); glVertex3f(0, 0.95, 0.05);
       glColor3f(0, 0, 1);
       glVertex3f(0, 0, -1); glVertex3f(0, 0, 1);
+      glVertex3f(-0.05, 0, 0.95); glVertex3f(0.05, 0, 0.95);
     glEnd;
   glPopMatrix;
 end;

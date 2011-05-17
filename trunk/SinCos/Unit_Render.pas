@@ -12,7 +12,7 @@ type
     xRot,yRot:single;
     fAreaX,fAreaY:integer;
   public
-    constructor Create(RenderFrame:HWND; InX,InY:integer);
+    constructor Create(DummyFrame,RenderFrame:HWND; InX,InY:integer);
     destructor Destroy; override;
 
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -38,11 +38,12 @@ implementation
 uses Unit_Objects;
 
 
-constructor TRender.Create(RenderFrame:HWND; InX,InY:integer);
+constructor TRender.Create(DummyFrame,RenderFrame:HWND; InX,InY:integer);
 begin
   Inherited Create;
 
-  SetRenderFrame(RenderFrame, h_DC, h_RC);
+  SetRenderFrameAA(DummyFrame, RenderFrame, 16, h_DC, h_RC);
+
   SetRenderDefaults;
   SetArea(InX,InY);
 
@@ -63,7 +64,7 @@ end;
 
 destructor TRender.Destroy;
 begin
-  wglMakeCurrent(0,0);
+  wglMakeCurrent(h_DC, 0);
   wglDeleteContext(h_RC);
   Inherited;
 end;
@@ -109,8 +110,9 @@ end;
 
 procedure TRender.Render;
 begin
+  glEnable(GL_MULTISAMPLE_ARB);
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
-  glLoadIdentity;           
+  glLoadIdentity;
 
   glTranslatef(0,0,-1.1);
 
