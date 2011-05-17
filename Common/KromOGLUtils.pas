@@ -1,6 +1,7 @@
 unit KromOGLUtils;
 {$IFDEF VER140} {$DEFINE WDC} {$ENDIF}  // Delphi 6
 {$IFDEF VER150} {$DEFINE WDC} {$ENDIF}  // Delphi 7
+{$IFDEF VER220} {$DEFINE WDC} {$ENDIF}  // Delphi XE
 interface
 uses
   dglOpenGL,
@@ -259,6 +260,7 @@ begin
   StrDispose(s); //Free-up space
 end;
 
+
 procedure BuildFont(h_DC:HDC; FontSize:integer; FontWeight:word=FW_NORMAL);
 var Font: HFONT;
 begin
@@ -271,6 +273,7 @@ begin
   wglUseFontBitmaps(h_dc,0,128,20000);
 end;
 
+
 procedure glPrint(text: string);
 begin
   if text = '' then exit;
@@ -279,6 +282,7 @@ begin
   glCallLists(length(text),GL_UNSIGNED_BYTE,Pchar(@text[1]));
   glPopAttrib;
 end;
+
 
 function ReadClick(X, Y: word): Vector3f;
 var viewport:TVector4i;
@@ -310,12 +314,14 @@ begin
   end;
 end;
 
+
 procedure kSetColorCode(TypeOfValue:KCode;IndexNum:integer);
 begin
 glColor4ub(IndexNum mod 256,
           (IndexNum mod 65536) div 256,    // 1,2,4(524288) 8,16,32,64,128 //0..31
           (IndexNum mod 524288) div 65536+byte(TypeOfValue)*8,255);
 end;
+
 
 procedure kGetColorCode(RGBColor:Pointer;var TypeOfValue:KCode;var IndexNum:integer);
 begin
@@ -363,7 +369,6 @@ begin
   if WGL_EXT_swap_control then
     wglSwapIntervalEXT(byte(aVSync));
 end;
-
 
 
 end.
