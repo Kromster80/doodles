@@ -115,7 +115,7 @@ AutoIncBuild=1
 MajorVer=1
 MinorVer=0
 Release=0
-Build=75
+Build=78
 Debug=0
 PreRelease=0
 Special=0
@@ -126,7 +126,7 @@ CodePage=1251
 [Version Info Keys]
 CompanyName=
 FileDescription=
-FileVersion=1.0.0.75
+FileVersion=1.0.0.78
 InternalName=
 LegalCopyright=freeware
 LegalTrademarks=
@@ -135,6 +135,9 @@ ProductName=
 ProductVersion=1.0 beta
 Comments=
 PrivateBuild=
+[Excluded Packages]
+C:\Program Files\Borland\Delphi7\Projects\Bpl\JvCtrlsD7D.bpl=JVCL Visual Controls
+C:\Program Files\Borland\Delphi7\Projects\Bpl\JvMMD7D.bpl=JVCL Multimedia and Image Components
 [HistoryLists\hlUnitAliases]
 Count=1
 Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
