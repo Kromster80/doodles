@@ -17,6 +17,8 @@ type
   Vector2f = record U,V:single; end;
   PVector3f = ^Vector3f;
 
+  TProcedure = procedure of object;
+
 function ElapsedTime(i1: pcardinal): string;
 function ExtractOpenedFileName(in_s: string):string;
 function GetFileExt (const FileName: string): string;
@@ -118,6 +120,9 @@ procedure MailTo(Address,Subject,Body:string);
 procedure OpenMySite(ToolName:string; Address:string='http://krom.reveur.de');
 
 procedure RegisterFileType(ExtName:string; AppName:string);
+
+function PerformanceCounter(Sender: TProcedure):cardinal;
+
 
 const
   eol:string=#13+#10; //EndOfLine
@@ -1182,6 +1187,31 @@ begin
     reg.Free;
   end;
   SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil) ;
+end;
+
+
+function PerformanceCounter(Sender: TProcedure):cardinal;
+var
+  counter : Int64;
+  Seconds : Double;
+  pf, pc1, pc2 : Int64;
+begin
+  Seconds := 0.0;
+  counter := 0;
+  QueryPerformanceFrequency(pf);
+  QueryPerformanceCounter(pc2);
+
+  repeat
+    pc1 := pc2;
+
+    Sender;
+
+    QueryPerformanceCounter(pc2);
+    inc(counter);
+    Seconds := Seconds + (pc2 - pc1) / pf;
+  until (Seconds >= 0.1);
+
+  Result := counter;
 end;
 
 
