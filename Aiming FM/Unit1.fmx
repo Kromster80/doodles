@@ -1,0 +1,21 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  BiDiMode = bdLeftToRight
+  Caption = 'Form1'
+  ClientHeight = 480
+  ClientWidth = 640
+  Transparency = False
+  Visible = False
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnResize = FormResize
+  StyleLookup = 'backgroundstyle'
+  object Image1: TImage
+    Align = alClient
+    Width = 640.000000000000000000
+    Height = 480.000000000000000000
+    OnMouseDown = Image1MouseDown
+    OnMouseMove = Image1MouseMove
+  end
+end

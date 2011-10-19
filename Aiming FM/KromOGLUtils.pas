@@ -1,20 +1,18 @@
 unit KromOGLUtils;
-{$IFDEF VER140} {$DEFINE WDC} {$ENDIF}  // Delphi 6
-{$IFDEF VER150} {$DEFINE WDC} {$ENDIF}  // Delphi 7
-{$IFDEF VER220} {$DEFINE WDC} {$ENDIF}  // Delphi XE
 interface
 uses
   dglOpenGL,
-  {$IFDEF FPC} GL, {$ENDIF}
-  SysUtils, Windows, Forms, KromUtils;
+  SysUtils, Windows;
 
 type
+    TColor4 = cardinal;
+
     procedure SetRenderFrameAA(DummyFrame,RenderFrame:HWND; AntiAliasing:byte; out h_DC: HDC; out h_RC: HGLRC);
     procedure SetRenderFrame(RenderFrame:HWND; out h_DC: HDC; out h_RC: HGLRC);
 
+    procedure SetRenderDefaults;
     procedure BuildFont(h_DC:HDC; FontSize:integer; FontWeight:word=FW_NORMAL);
-    procedure glPrint(text: string);
-
+    procedure glPrint(text: AnsiString);
     procedure SetupVSync(aVSync:boolean);
 
 
@@ -164,8 +162,8 @@ procedure SetRenderFrame(RenderFrame:HWND; out h_DC: HDC; out h_RC: HGLRC);
 begin
   InitOpenGL;
   SetContexts(RenderFrame, 0, h_DC, h_RC);
-  ReadExtensions;
   ReadImplementationProperties;
+  ReadExtensions;
 end;
 
 
@@ -214,7 +212,7 @@ procedure BuildFont(h_DC:HDC; FontSize:integer; FontWeight:word=FW_NORMAL);
 var Font: HFONT;
 begin
 //New parameter FontSize=16
-  font:=CreateFont(-abs(FontSize),0,0,0,FontWeight,0,0,0,ANSI_CHARSET,
+  font:=CreateFontA(-abs(FontSize),0,0,0,FontWeight,0,0,0,ANSI_CHARSET,
   OUT_TT_PRECIS,CLIP_DEFAULT_PRECIS,
   ANTIALIASED_QUALITY,FF_DONTCARE or DEFAULT_PITCH,
   'Terminal');
@@ -223,12 +221,12 @@ begin
 end;
 
 
-procedure glPrint(text: string);
+procedure glPrint(text: AnsiString);
 begin
   if text = '' then exit;
   glPushAttrib(GL_LIST_BIT);
   glListBase(20000);
-  glCallLists(length(text),GL_UNSIGNED_BYTE,Pchar(@text[1]));
+  glCallLists(length(text), GL_UNSIGNED_BYTE, PAnsiChar(@text[1]));
   glPopAttrib;
 end;
 
