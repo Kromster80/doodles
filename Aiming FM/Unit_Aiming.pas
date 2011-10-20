@@ -12,7 +12,6 @@ type
     fArrowSpeed:single;
     fTargetPosition:TPointF;
     fTargetVector:TPointF;
-    procedure CalculateTarget;
   public
     constructor Create;
     property ArrowSpeed:single read fArrowSpeed write fArrowSpeed;
@@ -56,12 +55,6 @@ end;
 function TAiming.GetHit: boolean;
 begin
   Result := GetTime > 0;
-end;
-
-
-procedure TAiming.CalculateTarget;
-begin
-  GetTarget(GetTime);
 end;
 
 
@@ -129,8 +122,6 @@ begin
   else
     Result := 0;
 end;
-
-
 
 
 end.
