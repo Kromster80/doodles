@@ -8,14 +8,45 @@ uses
   {$IFDEF FPC} GL, {$ENDIF}
   SysUtils, Windows, Forms, KromUtils;
 
-type
+type KCode = (kNil=0,kPoint=1,kSpline=2,kSplineAnchor=3,kSplineAnchorLength=4,
+              kPoly=5,kSurface=6,kObject=7,kButton=8);  //1..31 are ok
+
+    KAlign = (kaLeft, kaCenter, kaRight);
+
+    TColor4 = cardinal;
+
     procedure SetRenderFrameAA(DummyFrame,RenderFrame:HWND; AntiAliasing:byte; out h_DC: HDC; out h_RC: HGLRC);
     procedure SetRenderFrame(RenderFrame:HWND; out h_DC: HDC; out h_RC: HGLRC);
 
+    procedure SetRenderDefaults;
+    procedure CheckGLSLError(FormHandle:hWND; Handle: GLhandleARB; Param: GLenum; ShowWarnings:boolean; Text:string);
     procedure BuildFont(h_DC:HDC; FontSize:integer; FontWeight:word=FW_NORMAL);
     procedure glPrint(text: string);
-
+    function ReadClick(X, Y: word): Vector3f;
+    procedure glkScale(x:single);
+    procedure glkQuad(Ax,Ay,Bx,By,Cx,Cy,Dx,Dy:single);
+    procedure glkRect(Ax,Ay,Bx,By:single);
+    procedure glkMoveAALines(DoShift:boolean);
     procedure SetupVSync(aVSync:boolean);
+    procedure kSetColorCode(TypeOfValue:KCode;IndexNum:integer);
+    procedure kGetColorCode(RGBColor:Pointer;var TypeOfValue:KCode;var IndexNum:integer);
+
+const
+    MatModeDefaultV:string=
+    'varying vec3 kBlend;'+#10+#13+
+    'void main(void)'+#10+#13+
+    '{ '+#10+#13+
+    'kBlend = gl_SecondaryColor.rgb;'+#10+#13+
+    'gl_Position = ftransform();'+#10+#13+
+    '}';
+
+    MatModeDefaultF:string=
+    'varying vec3 kBlend;'+#10+#13+
+    'void main(void)'+#10+#13+
+    '{ '+#10+#13+
+    'vec3 kColor = smoothstep(0.4375,.5625,kBlend.rgb);'+#10+#13+
+    'gl_FragColor = vec4(kColor.rgb,1);'+#10+#13+
+    '}';
 
 
 implementation
@@ -210,6 +241,26 @@ begin
 end;
 
 
+procedure CheckGLSLError(FormHandle:hWND; Handle: GLhandleARB; Param: GLenum; ShowWarnings:boolean; Text:string);
+var l,glsl_ok:GLint; s:PChar; i:integer; ShowMessage:boolean;
+begin
+  glGetObjectParameterivARB(Handle, Param, @glsl_ok);
+  s := StrAlloc(1000); //Allocate space
+  glGetInfoLogARB(Handle, StrBufSize(s), l, PGLcharARB(s));
+//Intent to hide all Warning messages
+  ShowMessage:=ShowWarnings;
+  for i:=1 to length(s) do
+  if (s[i]=#13)and(i+1<length(s)) then
+  if (s[i+1]<>'W')and(s[i+1]<>'L')and(not ShowMessage) then ShowMessage:=true;
+  if ShowMessage and (s[0]<>'') then
+  begin
+    s := StrPCopy(s,Text + StrPas(s));
+    MessageBox(HWND(nil), s,'GLSL Log', MB_OK);
+  end;
+  StrDispose(s); //Free-up space
+end;
+
+
 procedure BuildFont(h_DC:HDC; FontSize:integer; FontWeight:word=FW_NORMAL);
 var Font: HFONT;
 begin
@@ -230,6 +281,86 @@ begin
   glListBase(20000);
   glCallLists(length(text),GL_UNSIGNED_BYTE,Pchar(@text[1]));
   glPopAttrib;
+end;
+
+
+function ReadClick(X, Y: word): Vector3f;
+var viewport:TVector4i;
+    projection:TMatrix4d;
+    modelview:TMatrix4d;
+    vx,vy:integer;
+    vz:single; //required to match GL_FLOAT - single
+    wx,wy,wz:GLdouble;
+begin
+  glGetIntegerv(GL_VIEWPORT,@viewport);
+  glGetDoublev(GL_PROJECTION_MATRIX,@projection);
+  glGetDoublev(GL_MODELVIEW_MATRIX,@modelview);
+
+  vx := x;
+  vy := y;
+
+  glReadPixels(vx, vy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, @vz);
+
+  if vz=1 then begin
+    Result.x:=1000000; //Something out of working range
+    Result.y:=0;
+    Result.z:=0;
+  end else begin
+    //This function uses OpenGL parameters, not dglOpenGL
+    gluUnProject(vx, vy, vz, modelview, projection, viewport, @wx, @wy, @wz);
+    Result.x:=wx;
+    Result.y:=wy;
+    Result.z:=wz;
+  end;
+end;
+
+
+procedure kSetColorCode(TypeOfValue:KCode;IndexNum:integer);
+begin
+glColor4ub(IndexNum mod 256,
+          (IndexNum mod 65536) div 256,    // 1,2,4(524288) 8,16,32,64,128 //0..31
+          (IndexNum mod 524288) div 65536+byte(TypeOfValue)*8,255);
+end;
+
+
+procedure kGetColorCode(RGBColor:Pointer;var TypeOfValue:KCode;var IndexNum:integer);
+begin
+IndexNum:=pword(cardinal(RGBColor))^+((pbyte(cardinal(RGBColor)+2)^)mod 8)*65536;
+TypeOfValue:=KCode((pbyte(cardinal(RGBColor)+2)^)div 8);
+end;
+
+procedure glkScale(x:single);
+begin
+  glScalef(x,x,x);
+end;
+
+procedure glkQuad(Ax,Ay,Bx,By,Cx,Cy,Dx,Dy:single);
+begin
+  glvertex2f(Ax,Ay);
+  glvertex2f(Bx,By);
+  glvertex2f(Cx,Cy);
+  glvertex2f(Dx,Dy);
+end;
+
+{Same as glkQuad, but requires on TopLeft and BottomRight coords}
+procedure glkRect(Ax,Ay,Bx,By:single);
+begin
+  glvertex2f(Ax,Ay);
+  glvertex2f(Bx,Ay);
+  glvertex2f(Bx,By);
+  glvertex2f(Ax,By);
+end;
+
+{Lines are drawn between pixels, thus when AA turned on they get blurred.
+We can negate this by using 0.5 offset
+Still it's unclear if that works on all GPUs the same..}
+//After we apply this command we can draw lines over pixels
+//when everythings done either shift back or PopMatrix
+procedure glkMoveAALines(DoShift:boolean);
+const Value=0.5;
+begin
+if DoShift then glTranslatef(Value,Value,0)
+           else glTranslatef(-Value,-Value,0);
 end;
 
 
