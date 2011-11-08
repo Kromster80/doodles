@@ -1,7 +1,5 @@
 unit Unit1;
-
 interface
-
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs, Diagnostics, FMX.Types3D,
@@ -13,20 +11,18 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure Image1MouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Single);
-    procedure Image1MouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Single);
+    procedure Image1MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+    procedure Image1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Single);
   private
     procedure OnIdle(Sender: TObject; var Done: Boolean);
   end;
 
 const
-      FPS_INTERVAL      =    300;
+  FPS_INTERVAL = 300;
 
 var
   Form1: TForm1;
-  ExeDir:string;
+  ExeDir: string;
 
   SW: TStopWatch;
   OldTimeFPS,OldFrameTimes,FrameTime,FrameCount: Int64;
