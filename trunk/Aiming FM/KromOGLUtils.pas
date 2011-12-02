@@ -2,84 +2,26 @@ unit KromOGLUtils;
 interface
 uses
   dglOpenGL,
-  SysUtils, Windows;
-
+  SysUtils
+  {$IFDEF WINDOWS}
+  ,Windows
+  {$ENDIF}
+  ;
 type
     TColor4 = cardinal;
-
-    procedure SetRenderFrameAA(DummyFrame,RenderFrame:HWND; AntiAliasing:byte; out h_DC: HDC; out h_RC: HGLRC);
-    procedure SetRenderFrame(RenderFrame:HWND; out h_DC: HDC; out h_RC: HGLRC);
+    KCode = (kNil=0, kObject=7);
 
     procedure SetRenderDefaults;
-    procedure BuildFont(h_DC:HDC; FontSize:integer; FontWeight:word=FW_NORMAL);
-    procedure glPrint(text: AnsiString);
-    procedure SetupVSync(aVSync:boolean);
+    procedure glkScale(x:single);
+    procedure kSetColorCode(TypeOfValue: KCode;IndexNum:integer);
+    procedure kGetColorCode(RGBColor:Pointer;var TypeOfValue:KCode;var IndexNum:integer);
 
 
 implementation
 
 
-function SetDCPixelFormat(h_DC:HDC; PixelFormat:Integer):boolean;
-var
-  nPixelFormat: Integer;
-  PixelDepth:integer;
-  pfd: TPixelFormatDescriptor;
-begin
-  PixelDepth := 32; //32bpp is common
-
-  with pfd do begin
-    nSize           := SizeOf(TPIXELFORMATDESCRIPTOR); // Size Of This Pixel Format Descriptor
-    nVersion        := 1;                    // The version of this data structure
-    dwFlags         := PFD_DRAW_TO_WINDOW    // Buffer supports drawing to window
-                       or PFD_SUPPORT_OPENGL // Buffer supports OpenGL drawing
-                       or PFD_DOUBLEBUFFER;  // Supports double buffering
-    iPixelType      := PFD_TYPE_RGBA;        // RGBA color format
-    cColorBits      := PixelDepth;           // OpenGL color depth
-    cRedBits        := 0;                    // Number of red bitplanes
-    cRedShift       := 0;                    // Shift count for red bitplanes
-    cGreenBits      := 0;                    // Number of green bitplanes
-    cGreenShift     := 0;                    // Shift count for green bitplanes
-    cBlueBits       := 0;                    // Number of blue bitplanes
-    cBlueShift      := 0;                    // Shift count for blue bitplanes
-    cAlphaBits      := 0;                    // Not supported
-    cAlphaShift     := 0;                    // Not supported
-    cAccumBits      := 0;                    // No accumulation buffer
-    cAccumRedBits   := 0;                    // Number of red bits in a-buffer
-    cAccumGreenBits := 0;                    // Number of green bits in a-buffer
-    cAccumBlueBits  := 0;                    // Number of blue bits in a-buffer
-    cAccumAlphaBits := 0;                    // Number of alpha bits in a-buffer
-    cDepthBits      := 16;                   // Specifies the depth of the depth buffer
-    cStencilBits    := 0;                    // Turn off stencil buffer
-    cAuxBuffers     := 0;                    // Not supported
-    iLayerType      := PFD_MAIN_PLANE;       // Ignored
-    bReserved       := 0;                    // Number of overlay and underlay planes
-    dwLayerMask     := 0;                    // Ignored
-    dwVisibleMask   := 0;                    // Transparent color of underlay plane
-    dwDamageMask    := 0;                    // Ignored
-  end;
-
-  if PixelFormat = 0 then
-    nPixelFormat := ChoosePixelFormat(h_DC, @pfd)
-  else
-    nPixelFormat := PixelFormat;
-
-  if nPixelFormat = 0 then begin
-    MessageBox(0, 'Unable to find a suitable pixel format', 'Error', MB_OK or MB_ICONERROR);
-    Result := false;
-    exit;
-  end;
-
-  //Even with known pixel format we still need to supply some PFD structure
-  if not SetPixelFormat(h_DC, nPixelFormat, @pfd) then begin
-    MessageBox(0, 'Unable to set the pixel format', 'Error', MB_OK or MB_ICONERROR);
-    Result := false;
-    exit;
-  end;
-
-  Result := true;
-end;
-
-
+{$IFDEF WINDOWS}
+//Unused
 function GetMultisamplePixelFormat(h_dc: HDC; AntiAliasing:byte): integer;
 var
   pixelFormat: integer;
@@ -127,76 +69,13 @@ begin
     AntiAliasing := AntiAliasing div 2;
   until(AntiAliasing < 2);
 end;
-
-
-procedure SetContexts(RenderFrame:HWND; PixelFormat:integer; out h_DC: HDC; out h_RC: HGLRC);
-begin
-  h_DC := GetDC(RenderFrame);
-
-  if h_DC = 0 then
-  begin
-    MessageBox(HWND(nil), 'Unable to get a device context', 'Error', MB_OK or MB_ICONERROR);
-    exit;
-  end;
-
-  if not SetDCPixelFormat(h_DC, PixelFormat) then
-    exit;
-
-  h_RC := wglCreateContext(h_DC);
-
-  if h_RC = 0 then
-  begin
-    MessageBox(HWND(nil), 'Unable to create an OpenGL rendering context', 'Error', MB_OK or MB_ICONERROR);
-    exit;
-  end;
-
-  if not wglMakeCurrent(h_DC, h_RC) then
-  begin
-    MessageBox(HWND(nil), 'Unable to activate OpenGL rendering context', 'Error', MB_OK or MB_ICONERROR);
-    exit;
-  end;
-end;
-
-
-procedure SetRenderFrame(RenderFrame:HWND; out h_DC: HDC; out h_RC: HGLRC);
-begin
-  InitOpenGL;
-  SetContexts(RenderFrame, 0, h_DC, h_RC);
-  ReadImplementationProperties;
-  ReadExtensions;
-end;
-
-
-{The key problem is this: the function we use to get WGL extensions is, itself, an OpenGL extension.
-Thus like any OpenGL function, it requires an OpenGL context to call it. So in order to get the
-functions we need to create a context, we have to... create a context.
-
-Fortunately, this context does not need to be our final context. All we need to do is create a dummy
-context to get function pointers, then use those functions directly. Unfortunately, Windows does not
-allow recreation of a rendering context within a single HWND. We must destroy previous HWND context
-and create final HWND context after we are finished with the dummy context.}
-procedure SetRenderFrameAA(DummyFrame,RenderFrame:HWND; AntiAliasing:byte; out h_DC: HDC; out h_RC: HGLRC);
-var PixelFormat:integer;
-begin
-  InitOpenGL;
-  SetContexts(DummyFrame, 0, h_DC, h_RC);
-  ReadExtensions;
-  ReadImplementationProperties;
-
-  PixelFormat := GetMultisamplePixelFormat(h_DC, AntiAliasing);
-  wglMakeCurrent(h_DC, 0);
-  wglDeleteContext(h_RC);
-
-  SetContexts(RenderFrame, PixelFormat, h_DC, h_RC);
-  ReadExtensions;
-  ReadImplementationProperties;
-end;
+{$ENDIF}
 
 
 procedure SetRenderDefaults;
 begin
   glClearColor(0, 0, 0, 0); 	   //Background
-  glClear (GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT);
   glShadeModel(GL_SMOOTH);                 //Enables Smooth Color Shading
   glPolygonMode(GL_FRONT,GL_FILL);
   glEnable(GL_NORMALIZE);
@@ -208,33 +87,24 @@ begin
 end;
 
 
-procedure BuildFont(h_DC:HDC; FontSize:integer; FontWeight:word=FW_NORMAL);
-var Font: HFONT;
+procedure glkScale(x:single);
 begin
-//New parameter FontSize=16
-  font:=CreateFontA(-abs(FontSize),0,0,0,FontWeight,0,0,0,ANSI_CHARSET,
-  OUT_TT_PRECIS,CLIP_DEFAULT_PRECIS,
-  ANTIALIASED_QUALITY,FF_DONTCARE or DEFAULT_PITCH,
-  'Terminal');
-  SelectObject(h_dc,font);
-  wglUseFontBitmaps(h_dc,0,128,20000);
+  glScalef(x,x,x);
 end;
 
 
-procedure glPrint(text: AnsiString);
+procedure kSetColorCode(TypeOfValue:KCode; IndexNum:integer);
 begin
-  if text = '' then exit;
-  glPushAttrib(GL_LIST_BIT);
-  glListBase(20000);
-  glCallLists(length(text), GL_UNSIGNED_BYTE, PAnsiChar(@text[1]));
-  glPopAttrib;
+  glColor4ub(IndexNum mod 256,
+            (IndexNum mod 65536) div 256,    // 1,2,4(524288) 8,16,32,64,128 //0..31
+            (IndexNum mod 524288) div 65536 + byte(TypeOfValue)*8, 255);
 end;
 
 
-procedure SetupVSync(aVSync:boolean);
+procedure kGetColorCode(RGBColor:Pointer; var TypeOfValue:KCode; var IndexNum:integer);
 begin
-  if WGL_EXT_swap_control then
-    wglSwapIntervalEXT(byte(aVSync));
+  IndexNum := pword(cardinal(RGBColor))^+((pbyte(cardinal(RGBColor)+2)^)mod 8)*65536;
+  TypeOfValue := KCode((pbyte(cardinal(RGBColor)+2)^)div 8);
 end;
 
 

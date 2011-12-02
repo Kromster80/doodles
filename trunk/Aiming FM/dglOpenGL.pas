@@ -483,9 +483,9 @@ uses
   {$IFDEF DGL_WIN}, Windows{$ENDIF}
   {$IFDEF DGL_LINUX}, X, XLib, XUtil{$ENDIF}
 
-  // TODO_FM
+  //TODO_FM: From IFDEFs it is unclear how MACOS is handled, if at all
+  //Need a Mac to test it
   ,System.Types
-  // TODO_FM
 
   ;
 
@@ -13163,6 +13163,9 @@ const
   {$IFDEF darwin}
     OPENGL_LIBNAME = 'libGL.dylib';
     GLU_LIBNAME = 'libGLU.dylib';
+    //Supposedly this points to GL libs on Mac
+    //OPENGL_LIBNAME = '/System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib';
+    //GLU_LIBNAME = '/System/Library/Frameworks/OpenGL.framework/Libraries/libGLU.dylib';
   {$ELSE}
     OPENGL_LIBNAME = 'libGL.so.1';
     GLU_LIBNAME = 'libGLU.so.1';
@@ -18215,7 +18218,9 @@ end;
 initialization
 
 {$IFDEF CPU386}
+  {$IFNDEF DARWIN}
   Set8087CW($133F);
+  {$ENDIF}
 {$ENDIF}
 
 finalization

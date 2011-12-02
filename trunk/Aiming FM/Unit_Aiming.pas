@@ -1,6 +1,6 @@
 unit Unit_Aiming;
 interface
-uses Classes, Math, Windows, SysUtils;
+uses Classes, Math, SysUtils;
 
 type
   TPointF = record
