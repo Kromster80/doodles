@@ -1,17 +1,25 @@
 unit Unit_Render;
 interface
-uses Classes, dglOpenGL, OpenGL, KromOGLUtils, Math, Windows, SysUtils;
+uses
+  Classes
+  {$IFDEF MSWINDOWS}
+  , dglOpenGL,
+  {$ENDIF}
+  {$IFDEF MACOS}
+  ,Macapi.ObjectiveC, Macapi.OpenGL, Macapi.AppKit, Macapi.CocoaTypes, Macapi.Foundation, FMX.Platform.Mac, System.Rtti
+  {$ENDIF}
+
+  , KromOGLUtils, Math, FMX.Types, OpenGL_FMX, SysUtils;
 
 type
   TRender = class
     private
-      h_DC: HDC;
-      h_RC: HGLRC;
+      fSimpleOGL: TSimpleOGL;
       fAreaX,fAreaY:integer;
       csCircle:GLUint;
       procedure CompileCommonShapes;
     public
-      constructor Create(RenderFrame:HWND; InX,InY:integer);
+      constructor Create(RenderFrame: TFmxHandle; X,Y: Integer);
       destructor Destroy; override;
       procedure SetArea(InX,InY:integer);
       procedure RenderResize;
@@ -27,11 +35,15 @@ implementation
 uses Unit1, Unit_Aiming;
 
 
-constructor TRender.Create(RenderFrame:HWND; InX,InY:integer);
+constructor TRender.Create(RenderFrame:TFmxHandle; X,Y: Integer);
 begin
-  SetRenderFrame(RenderFrame, h_DC, h_RC);
+  fSimpleOGL := TSimpleOGL.Create;
+
+  fSimpleOGL.Init(0, RenderFrame, 0, True);
+
+  //SetRenderFrame(RenderFrame, h_DC, h_RC);
   SetRenderDefaults;
-  SetArea(InX,InY);
+  SetArea(X,Y);
 
   glDisable(GL_LIGHTING);
   //glDisable(GL_BLEND);
@@ -41,8 +53,8 @@ begin
 
   glLineWidth(1);
 
-  BuildFont(h_DC, 12, FW_BOLD);
-  SetupVSync(true);
+  //BuildFont(h_DC, 12, FW_BOLD);
+  //SetupVSync(True);
 
   CompileCommonShapes;
 end;
@@ -50,8 +62,8 @@ end;
 
 destructor TRender.Destroy;
 begin
-  wglMakeCurrent(0,0);
-  wglDeleteContext(h_RC);
+  fSimpleOGL.Close;
+  fSimpleOGL.Free;
   Inherited;
 end;
 
@@ -75,16 +87,18 @@ procedure TRender.SetArea(InX,InY:integer);
 begin
   fAreaX := max(InX,1);
   fAreaY := max(InY,1);
+
+  fSimpleOGL.Resize(fAreaX, fAreaY);
+
   RenderResize;
 end;
 
 
 procedure TRender.RenderResize;
 begin
-  glViewport(0, 0, fAreaX, fAreaY);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity;
-  gluOrtho2D(0, fAreaX, fAreaY, 0);
+  glOrtho(0, fAreaX, fAreaY, 0, -1000, 1000);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity;
 end;
@@ -157,7 +171,7 @@ begin
 
   glPopMatrix;
 
-  if fAiming.GetHit then
+  {if fAiming.GetHit then
   begin
     glColor3f(1,0,0);
     glRasterPos2f(10, fAreaY-60);
@@ -171,10 +185,11 @@ begin
 
   glColor3f(0,0,0);
   glRasterPos2f(10, fAreaY-20);
-  glPrint('Click and drag left mouse button to place an enemy and set its movement vector');
+  glPrint('Click and drag left mouse button to place an enemy and set its movement vector');}
 
   glFinish;
-  SwapBuffers(h_DC);
+  fSimpleOGL.Swap;
+  //SwapBuffers(h_DC);
 end;
    
 

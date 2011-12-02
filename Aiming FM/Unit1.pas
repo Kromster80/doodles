@@ -2,8 +2,7 @@ unit Unit1;
 interface
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs, Diagnostics, FMX.Types3D,
-  FMX.Layers3D, Fmx.Platform.Win, FMX.Objects;
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs, Diagnostics, FMX.Objects;
 
 type
   TForm1 = class(TForm)
@@ -42,7 +41,7 @@ begin
 
   ExeDir := ExtractFilePath(ParamStr(0));
 
-  fRender := TRender.Create(FmxHandleToHWND(Handle), ClientWidth, ClientHeight);
+  fRender := TRender.Create(Handle, ClientWidth, ClientHeight);
   fAiming := TAiming.Create;
 
   Application.OnIdle := OnIdle;
