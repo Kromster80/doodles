@@ -68,6 +68,7 @@ function Pow(const Base, Exponent: integer): integer;
   procedure Normalize(var v:Vector3f); overload;
   procedure Normalize(var ix,iy:single); overload;
 
+  function Lerp(x1, x2, MixValue: Single): Single;
   function Mix(x1,x2,MixValue:single):single; overload;
   function Mix(x1,x2:integer; MixValue:single):integer; overload;
   function Mix(x1,x2:Vector3f; MixValue:single):vector3f; overload;
@@ -684,6 +685,12 @@ if len=0 then len:=1;
 ix:=ix/len;
 iy:=iy/len;
 end;
+
+function Lerp(x1, x2, MixValue: Single): Single;
+begin
+  Result := x1 + (x2 - x1) * MixValue;
+end;
+
 
 function Mix(x1,x2,MixValue:single):single; overload;
 begin
