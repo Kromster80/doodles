@@ -93,10 +93,8 @@
 			<DelphiCompile Include="$(MainSource)">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="FMX.Filter.pas"/>
 			<DCCReference Include="Unit1.pas">
 				<Form>Form1</Form>
-				<FormType>fmx</FormType>
 			</DCCReference>
 			<DCCReference Include="Unit_Render.pas"/>
 			<DCCReference Include="OpenGL_FMX.pas"/>

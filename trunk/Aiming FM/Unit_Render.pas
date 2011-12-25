@@ -3,13 +3,13 @@ interface
 uses
   Classes
   {$IFDEF MSWINDOWS}
-  , dglOpenGL,
+  , dglOpenGL
   {$ENDIF}
   {$IFDEF MACOS}
-  ,Macapi.ObjectiveC, Macapi.OpenGL, Macapi.AppKit, Macapi.CocoaTypes, Macapi.Foundation, FMX.Platform.Mac, System.Rtti
+  , Macapi.ObjectiveC, Macapi.OpenGL, Macapi.AppKit, Macapi.CocoaTypes, Macapi.Foundation, FMX.Platform.Mac
   {$ENDIF}
 
-  , KromOGLUtils, Math, FMX.Types, OpenGL_FMX, SysUtils;
+  , Math, FMX.Types, OpenGL_FMX, SysUtils;
 
 type
   TRender = class
@@ -41,8 +41,17 @@ begin
 
   fSimpleOGL.Init(0, RenderFrame, 0, True);
 
-  //SetRenderFrame(RenderFrame, h_DC, h_RC);
-  SetRenderDefaults;
+  glClearColor(0, 0, 0, 0); 	   //Background
+  glClear(GL_COLOR_BUFFER_BIT);
+  glShadeModel(GL_SMOOTH);                 //Enables Smooth Color Shading
+  glPolygonMode(GL_FRONT,GL_FILL);
+  glEnable(GL_NORMALIZE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA); //Set alpha mode
+  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+  glEnable(GL_COLOR_MATERIAL);                 //Enable Materials
+  glEnable(GL_TEXTURE_2D);                     // Enable Texture Mapping
+
   SetArea(X,Y);
 
   glDisable(GL_LIGHTING);
@@ -107,6 +116,8 @@ end;
 procedure TRender.Render;
 var i:integer;
 begin
+  fSimpleOGL.Activate;
+
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
   glLoadIdentity;
@@ -187,9 +198,7 @@ begin
   glRasterPos2f(10, fAreaY-20);
   glPrint('Click and drag left mouse button to place an enemy and set its movement vector');}
 
-  glFinish;
   fSimpleOGL.Swap;
-  //SwapBuffers(h_DC);
 end;
    
 

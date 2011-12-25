@@ -3,7 +3,7 @@ program AimingFM;
 {$DEFINE MACOS_VM_DEBUG}
 
 uses
-  FMX.Filter in 'FMX.Filter.pas',
+  //FMX.Filter in 'FMX.Filter.pas',
   FMX.Forms,
   Unit1 in 'Unit1.pas' {Form1},
   Unit_Render in 'Unit_Render.pas',
