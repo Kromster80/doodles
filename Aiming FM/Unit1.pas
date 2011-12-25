@@ -4,25 +4,26 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs, Diagnostics, FMX.Objects;
 
+
 type
   TForm1 = class(TForm)
     Image1: TImage;
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
     procedure Image1MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure Image1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Single);
   private
     procedure OnIdle(Sender: TObject; var Done: Boolean);
   end;
 
+
 const
   FPS_INTERVAL = 300;
+
 
 var
   Form1: TForm1;
   ExeDir: string;
-
   SW: TStopWatch;
   OldTimeFPS,OldFrameTimes,FrameTime,FrameCount: Int64;
 
@@ -36,8 +37,6 @@ procedure TForm1.FormCreate(Sender: TObject);
 begin
   SW := TStopWatch.Create;
   SW.Start;
-
-  Randomize;
 
   ExeDir := ExtractFilePath(ParamStr(0));
 
@@ -70,13 +69,6 @@ begin //Counting FPS
 end;
 
 
-procedure TForm1.FormDestroy(Sender: TObject);
-begin
-  fAiming.Free;
-  fRender.Free;
-end;
-
-
 procedure TForm1.FormResize(Sender: TObject);
 begin
   if fRender=nil then exit;
@@ -86,15 +78,17 @@ end;
 
 procedure TForm1.Image1MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 begin
-  fAiming.TargetPosition := PointF(X - ClientWidth div 2, Y - ClientHeight div 2);
+    fAiming.TargetPosition := PointF(X - ClientWidth div 2, Y - ClientHeight div 2);
 end;
+
 
 procedure TForm1.Image1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Single);
 begin
-  if ssLeft in Shift then
-    fAiming.TargetVector := PointF((X - ClientWidth div 2) - fAiming.TargetPosition.X,
-                                   (Y - ClientHeight div 2) - fAiming.TargetPosition.Y);
+    if ssLeft in Shift then
+      fAiming.TargetVector := PointF((X - ClientWidth div 2) - fAiming.TargetPosition.X,
+                                     (Y - ClientHeight div 2) - fAiming.TargetPosition.Y);
 end;
+
 
 {procedure TForm1.FormKeyPress(Sender: TObject; var Key: Char);
 begin

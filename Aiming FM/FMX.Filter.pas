@@ -39,6 +39,7 @@ type
     Values: TShaderValueRecArray;
   end;
 
+  TFilterClass = class of TFilter;
   TFilter = class(TPersistent)
   private
     function GetShaderValues(const Index: string): Variant;
@@ -60,6 +61,8 @@ type
     constructor Create; virtual;
     destructor Destroy; override;
     class function FilterAttr: TFilterRec; virtual;
+    { Class static method for C++ access }
+    class function FilterAttrForClass(C: TFilterClass): TFilterRec; static;
     procedure Apply; virtual; abstract;
     property Values[const Index: string]: Variant read GetShaderValues
       write SetShaderValues; default;
@@ -69,8 +72,6 @@ type
       write SetShaderValuesAsPoint;
     property InputFilter: TFilter read FInputFilter write SetInputFilter;
   end;
-
-  TFilterClass = class of TFilter;
 
 { TShaderFilter }
 
@@ -227,8 +228,6 @@ begin
   Result := nil;
   if Filters = nil then
     Exit;
-
-  if GlobalUseHWEffects then //Added
   for i := 0 to Filters.Count - 1 do
     if CompareText(TFilterClass(Filters.Objects[i]).FilterAttr.Name, AName) = 0
     then
@@ -245,8 +244,6 @@ begin
   Result := nil;
   if Filters = nil then
     Exit;
-
-  if GlobalUseHWEffects then //Added
   for i := 0 to Filters.Count - 1 do
     if CompareText(TFilterClass(Filters.Objects[i]).FilterAttr.Name, AName) = 0
     then
@@ -338,6 +335,11 @@ end;
 class function TFilter.FilterAttr: TFilterRec;
 begin
   FillChar(Result, SizeOf(Result), 0);
+end;
+
+class function TFilter.FilterAttrForClass(C: TFilterClass): TFilterRec;
+begin
+  Result := C.FilterAttr;
 end;
 
 function TFilter.GetShaderValues(const Index: string): Variant;
