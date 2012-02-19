@@ -31,8 +31,6 @@ procedure FreeThenNil(var Obj);
 procedure krintersect(x1,y1,x2,y2,x3,y3:single; SizeX,SizeY:integer; var ot:array of integer);
 function ReverseString(s1:string):string;
 
-function real2(c1,c2,c3,c4:char):real;
-function unreal2(x:real):string;
 function hextoint(st: char): integer;
 function int2fix(Number,Len:integer):string;
 function float2fix(Number:single; Digits:integer):string;
@@ -392,41 +390,6 @@ end;
 
 end;
 
-
-function real2(c1,c2,c3,c4:char):real;
-var //i,sign,exponent:integer; t,mantissa:real;
-Tmp:array[1..4] of char;
-begin
-Tmp[1]:=c1; Tmp[2]:=c2; Tmp[3]:=c3; Tmp[4]:=c4;
-Result:=Single(Tmp);
-{if ord(c4) div 128 = 1 then Sign:=-1 else Sign:=1;
-Exponent:=(ord(c4) mod 128)*2 + (ord(c3) div 128)-127;
-Mantissa:=(ord(c3) mod 128)*65536+ord(c2)*256+ord(c1);
-t:=(1+Mantissa/8388608)*Sign;
-if Exponent=-127 then t:=0 else
-if exponent>0 then for i:=1 to exponent do t:=t*2 else
-if exponent<0 then for i:=-1 downto exponent do t:=t/2;
-real2:=t;}
-end;
-
-
-function unreal2(x:real):string;
-var sign,mant,expo:integer;
-begin
-if x<0 then sign:=1 else sign:=0;
-if x<>0 then begin
-x:=abs(x); expo:=0;
-if x>=2 then repeat                  //normalizes X
-x:=x/2; expo:=expo+1;           //so it look like
-until(x<2)              // 1.28758...
-else if x<1 then repeat                  //
-x:=x*2; expo:=expo-1;   //power of 2
-until(x>=1)             //to use
-else expo:=0;           //
-mant:=round((x-1)*8388608); expo:=expo+127;
-unreal2:=chr(mant)+chr(mant div 256)+chr((mant div 65536)+(expo mod 2)*128)+chr(expo div 2 + sign*128);
-end else unreal2:=#0+#0+#0+#0;
-end;
 
 function int2fix(Number,Len:integer):string;
 var ss:string; x:byte;
