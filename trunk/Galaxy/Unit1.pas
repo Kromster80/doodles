@@ -19,8 +19,6 @@ const
 
 var
   Form1: TForm1;
-  ExeDir:string;
-
   OldTimeFPS,OldFrameTimes,FrameTime,FrameCount:cardinal;
 
 
@@ -33,10 +31,8 @@ procedure TForm1.FormCreate(Sender: TObject);
 begin
   Randomize;
 
-  ExeDir := ExtractFilePath(Application.ExeName);
-
   fRender := TRender.Create(Handle, ClientWidth, ClientHeight);
-  Galaxy_Create(500, Max(ClientWidth, ClientHeight));
+  Galaxy_Create(300, Max(ClientWidth, ClientHeight));
 
   Application.OnIdle := OnIdle;
   Form1.FormResize(Self);
@@ -44,22 +40,23 @@ end;
 
 
 procedure TForm1.OnIdle(Sender: TObject; var Done: Boolean);
-begin //Counting FPS
-  //if not Form1.Active then exit;
-
-  FrameTime:=GetTickCount-OldTimeFPS;
-  OldTimeFPS:=GetTickCount;
-  if FrameTime>1000 then FrameTime:=1000;
-  inc(OldFrameTimes,FrameTime);
+begin
+  //Counting FPS
+  FrameTime := GetTickCount - OldTimeFPS;
+  OldTimeFPS := GetTickCount;
+  if FrameTime > 1000 then
+    FrameTime := 1000;
+  inc(OldFrameTimes, FrameTime);
   inc(FrameCount);
-  if OldFrameTimes>=FPS_INTERVAL then begin
-    Caption := floattostr(RoundTo(1000/(OldFrameTimes/FrameCount),-2))+' fps';
-    OldFrameTimes:=0;
-    FrameCount:=0;
+  if OldFrameTimes >= FPS_INTERVAL then
+  begin
+    Caption := floattostr(RoundTo(1000 / (OldFrameTimes / FrameCount), -2)) + ' fps';
+    OldFrameTimes := 0;
+    FrameCount := 0;
   end; //FPS calculation complete
 
   fRender.Render;
-  Done := false;
+  Done := False;
 end;
 
 
@@ -75,6 +72,7 @@ begin
     Galaxy_Add(X - ClientWidth / 2, Y - ClientHeight / 2);
 end;
 
+
 procedure TForm1.FormMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   Galaxy_Add(X - ClientWidth / 2, Y - ClientHeight / 2);
@@ -89,4 +87,3 @@ end;
 
 
 end.
-
