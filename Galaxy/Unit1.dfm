@@ -15,6 +15,7 @@ object Form1: TForm1
   Position = poScreenCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnMouseMove = FormMouseMove
   OnMouseUp = FormMouseUp
   OnResize = FormResize
   PixelsPerInch = 96
