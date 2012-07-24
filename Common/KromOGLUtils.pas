@@ -229,7 +229,7 @@ end;
 procedure SetRenderDefaults;
 begin
   glClearColor(0, 0, 0, 0); 	   //Background
-  glClear (GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT);
   glShadeModel(GL_SMOOTH);                 //Enables Smooth Color Shading
   glPolygonMode(GL_FRONT,GL_FILL);
   glEnable(GL_NORMALIZE);

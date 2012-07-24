@@ -4,7 +4,6 @@ uses Classes, Controls, KromUtils, Math, Windows, SysUtils;
 
 type
   TVector2f = record X,Y: Double; end;
-  TColor4f = record R,G,B,A: Double; end;
 
   TParticle = record
     Loc: TVector2f;
@@ -135,7 +134,7 @@ begin
     Particles[I].Loc.Y := Particles[I].Loc.Y + Particles[I].Vec.Y * Delta;
 
     //When particles fly away we return them back as hot
-    if (Abs(Particles[I].Loc.X) > 500) or (Abs(Particles[I].Loc.Y) > 500) then
+    if (Sqr(Particles[I].Loc.X) + Sqr(Particles[I].Loc.Y) > Sqr(500)) then
     begin
       RotationCoef := 1.5 + Random * 0.4 + 0.1;
 

@@ -31,13 +31,14 @@ begin
   inherited Create;
 
   SetRenderFrame(RenderFrame, h_DC, h_RC);
-  SetRenderDefaults;
-  SetArea(InX,InY);
 
+  glClearColor(0, 0, 0, 0);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDisable(GL_LIGHTING);
-  //glDisable(GL_BLEND);
-
   glEnable(GL_POINT_SMOOTH);
+
+  SetArea(InX,InY);
 
   BuildFont(h_DC, 12, FW_BOLD);
   SetupVSync(False);
@@ -65,7 +66,7 @@ begin
   glViewport(0, 0, fAreaX, fAreaY);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity;
-  gluOrtho2D(0, fAreaX, fAreaY, 0);
+  glOrtho(-fAreaX/2, fAreaX/2, fAreaY/2, -fAreaY/2, 0, 1);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity;
 end;
@@ -74,14 +75,10 @@ end;
 procedure TRender.Render;
 var I: Integer;
 begin
-  glClearColor(0, 0, 0, 1);
-  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT);
   glLoadIdentity;
 
   Galaxy_Update;
-
-  glPushMatrix;
-    glTranslatef(fAreaX/2, fAreaY/2, 0);
 
     glPointSize(10);
     glBegin(GL_POINTS);
@@ -96,12 +93,11 @@ begin
     glBegin(GL_POINTS);
       for I := 0 to High(Particles) do
       begin
-        glColor4f(0.25 + Particles[I].Temp*2, 0.5 - Particles[I].Temp/2, 0.5 - Particles[I].Temp, 1 - Particles[I].Temp);
+        glColor4f(0.05 + Particles[I].Temp*2, 0.35 - Particles[I].Temp/2, 0.5 - Particles[I].Temp, 1 - Particles[I].Temp);
         glVertex2dv(@Particles[I].Loc);
       end;
     glEnd;
 
-  glPopMatrix;
 
   {glColor3f(1,1,1);
   glRasterPos2f(10, fAreaY-20);
