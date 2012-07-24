@@ -8,14 +8,14 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure FormMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
+    procedure FormMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
   private
     procedure OnIdle(Sender: TObject; var Done: Boolean);
   end;
 
 const
-      FPS_INTERVAL      =    1000;
+  FPS_INTERVAL = 1000;
 
 var
   Form1: TForm1;
@@ -30,14 +30,13 @@ uses Unit_Render, Unit_Galaxy;
 
 
 procedure TForm1.FormCreate(Sender: TObject);
-var i: integer; R1, R2: Integer;
 begin
   Randomize;
 
   ExeDir := ExtractFilePath(Application.ExeName);
 
   fRender := TRender.Create(Handle, ClientWidth, ClientHeight);
-  Galaxy_Create(ClientWidth, ClientHeight);;
+  Galaxy_Create(500, Max(ClientWidth, ClientHeight));
 
   Application.OnIdle := OnIdle;
   Form1.FormResize(Self);
@@ -46,7 +45,7 @@ end;
 
 procedure TForm1.OnIdle(Sender: TObject; var Done: Boolean);
 begin //Counting FPS
-  if not Form1.Active then exit;
+  //if not Form1.Active then exit;
 
   FrameTime:=GetTickCount-OldTimeFPS;
   OldTimeFPS:=GetTickCount;
@@ -70,10 +69,17 @@ begin
 end;
 
 
+procedure TForm1.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+  if ssLeft in Shift then
+    Galaxy_Add(X - ClientWidth / 2, Y - ClientHeight / 2);
+end;
+
 procedure TForm1.FormMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   Galaxy_Add(X - ClientWidth / 2, Y - ClientHeight / 2);
 end;
+
 
 procedure TForm1.FormResize(Sender: TObject);
 begin
