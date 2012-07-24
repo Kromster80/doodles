@@ -1,0 +1,376 @@
+<html>
+<body bgcolor="#212121">
+<canvas id="graphic" width="1000" height="700">Canvas is not supported.</canvas>
+<script type="text/javascript">
+
+var seed = 1112;
+
+function random()
+{
+  seed = (seed*9301+49297) % 233280;
+  return seed/(233280.0);
+}
+
+var canvas = null;
+var context = null;
+var imgd = null;
+var pix = null;
+var w = 1000;
+var h = 700;
+var k = 0;
+var r = 0;
+
+var particleRadius = 4;
+var particleRadiusSq = particleRadius * particleRadius;
+var gravityK = 100;
+var elastisityK = 250;
+var count = 0
+var xx = []
+var yy = []
+var vx = []
+var vy = []
+var te = []
+var timeSpeed = 1;
+var spawnVelX = 0;
+var spawnVelY = 0;
+
+var tmprOut = [
+      "rgba(200, 20,  0, 0.14)",
+      "rgba(210, 40,  5, 0.15)",
+      "rgba(220, 70, 10, 0.15)",
+      "rgba(230,100, 15, 0.15)",
+      "rgba(240,130, 20, 0.16)",
+      "rgba(245,140, 30, 0.17)",
+      "rgba(250,150, 35, 0.18)",
+      "rgba(253,160, 40, 0.19)",
+      "rgba(255,170, 50, 0.21)",
+      "rgba(255,175, 65, 0.23)",
+      "rgba(255,180, 80, 0.25)",
+      "rgba(255,185, 90, 0.27)",
+      "rgba(255,190,100, 0.29)",
+      "rgba(255,200,110, 0.31)",
+      "rgba(255,210,150, 0.33)",
+      "rgba(255,220,180, 0.35)"
+    ]
+
+var tmprIn = [
+      "rgba(200, 40, 90, 0.62)",
+      "rgba(210, 50, 95, 0.63)",
+      "rgba(220, 76,110, 0.64)",
+      "rgba(230,100,115, 0.65)",
+      "rgba(240,130,120, 0.66)",
+      "rgba(245,140,130, 0.67)",
+      "rgba(250,150,135, 0.68)",
+      "rgba(253,160,140, 0.69)",
+      "rgba(255,170,150, 0.71)",
+      "rgba(255,175,165, 0.73)",
+      "rgba(255,180,180, 0.75)",
+      "rgba(255,185,190, 0.77)",
+      "rgba(255,190,200, 0.79)",
+      "rgba(255,200,210, 0.81)",
+      "rgba(255,210,220, 0.83)",
+      "rgba(255,220,230, 0.85)"
+    ]
+
+
+function destroyParticles()
+{
+  xx = []
+  yy = []
+  vx = []
+  vy = []
+  te = []
+  count = 0;
+}
+
+function render()
+{
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.save();
+
+  // render particles
+  {
+    for (var i = 0; i < count; i++)
+    {
+      context.beginPath();
+      context.fillStyle = tmprOut[Math.round(te[i])];
+      context.arc(xx[i], yy[i], 5, 0, 6.28318531);
+      context.fill();
+    }
+
+    for (var i = 0; i < count; i++)
+    {
+      context.fillStyle=tmprIn[Math.round(te[i])]
+      context.fillRect(xx[i] - 1, yy[i] - 1, 2, 2);
+    }
+  }
+
+  // render play/pause
+  {
+    context.fillStyle   = '#ccc';
+    context.strokeStyle = '#ccc';
+    context.lineWidth   = 1;
+
+    if (timeSpeed == 0)
+    {
+      context.beginPath();
+      context.moveTo(10, 10);
+      context.lineTo(30, 20);
+      context.lineTo(10, 30);
+      context.lineTo(10, 10);
+
+      context.fill();
+      context.stroke();
+      context.closePath();
+    }
+    else
+    {
+      context.fillRect(12, 10, 5, 20);
+      context.fillRect(22, 10, 5, 20);
+    }
+  }
+
+  // render clear
+  {
+    context.fillStyle   = '#ccc';
+    context.strokeStyle = '#ccc';
+    context.lineWidth   = 4;
+
+    if (count > 0)
+    {
+      context.beginPath();
+      context.moveTo(10, 50);
+      context.lineTo(30, 70);
+      context.moveTo(30, 50);
+      context.lineTo(10, 70);
+
+      context.stroke();
+      context.closePath();
+    }
+  }
+
+  // render create
+  {
+    context.fillStyle   = '#ccc';
+    context.strokeStyle = '#ccc';
+    context.lineWidth   = 1;
+
+    var savedSeed = seed;
+    seed = 489;
+    context.beginPath();
+    for (var i = 0; i < 12; i++)
+      context.arc(11.0 + random() * 18.0 , 92.0 + random() * 16.0, 2.0, 0, 6.28318531);
+    context.fill();
+    seed = savedSeed;
+  }
+
+
+  // render velocity vector
+  {
+    context.fillStyle   = '#ccc';
+    context.strokeStyle = '#ccc';
+    context.lineWidth   = 1;
+
+    context.beginPath();
+    context.moveTo(20.0, 160);
+    context.lineTo(20.0, 200);
+    context.moveTo(0,  180.0);
+    context.lineTo(40, 180.0);
+    context.moveTo(20.0, 180.0);
+    context.lineTo(20.0 + spawnVelX, 180.0 + spawnVelY);
+
+    context.stroke();
+    context.closePath();
+
+    context.fillStyle   = '#eee';
+    context.beginPath();
+    context.arc(20.0 + spawnVelX, 180.0 + spawnVelY, 2.0, 0, 6.28318531);
+    context.fill();
+  }
+
+  context.restore();
+}
+
+function update()
+{
+  var dt = 0.05 * timeSpeed;
+  for (var i = 0; i < count; i++)
+  {
+    xx[i] += vx[i] * dt;
+    yy[i] += vy[i] * dt;
+    te[i] -= dt * te[i] * 0.0825;
+    if (te[i] < 0.5)
+      te[i] = 0.5;
+
+    for (var j = 0; j < i; j++)
+    {
+      var dx = xx[i] - xx[j];
+      var dy = yy[i] - yy[j];
+      var distSq = dx * dx + dy * dy;
+      var dist = Math.sqrt(distSq);
+      var distCb = distSq * dist;
+      
+      var forceX = gravityK * dx / (distCb + 0.1);
+      var forceY = gravityK * dy / (distCb + 0.1);
+
+      if (dist < particleRadius)
+      {
+        var k = (particleRadius - dist) / particleRadius;
+        forceX = 0;
+        forceY = 0;
+
+        forceX -= elastisityK * (dx / (dist + 0.001)) * (particleRadius - dist) * (particleRadius - dist) / particleRadius;
+        forceY -= elastisityK * (dy / (dist + 0.001)) * (particleRadius - dist) * (particleRadius - dist) / particleRadius;
+
+        var midVelX = (vx[i] + vx[j]) * 0.5;
+        var midVelY = (vy[i] + vy[j]) * 0.5;        
+
+        k = 1.0 - (1.0 - k) * 0.015;
+
+        te[i] += k * dt * 0.07;
+        te[j] += k * dt * 0.07;
+        if (te[i] > 15.2)
+          te[i] = 15.2;
+        if (te[j] > 15.2)
+          te[j] = 15.2;
+
+        vx[i] = vx[i] * k + midVelX * (1.0 - k);
+        vy[i] = vy[i] * k + midVelY * (1.0 - k);
+        vx[j] = vx[j] * k + midVelX * (1.0 - k);
+        vy[j] = vy[j] * k + midVelY * (1.0 - k);
+      }
+
+      vx[i] -= forceX * dt;
+      vy[i] -= forceY * dt;
+      vx[j] += forceX * dt;
+      vy[j] += forceY * dt;
+    }
+  }
+
+  render();
+}
+
+function createParticle(posX, posY, velX, velY)
+{
+  xx.push(posX);
+  yy.push(posY);
+  vx.push(velX);
+  vy.push(velY);
+  te.push(2.0 + random() * 3.5);
+  count = xx.length;
+}
+
+function initRandomParticles()
+{
+  var rotationK = 1.0 + random() * 0.4 + 0.1;
+
+  for (var i = 0; i < 400; i++)
+  {
+    var x = random() * canvas.width;
+    var y = random() * canvas.height;
+    var rx = (y / canvas.height - 0.5) * 12 * rotationK;
+    var ry = -(x / canvas.width - 0.5) * 12 * rotationK;
+
+    createParticle(x, y,
+                   (random() - 0.5) * 5 + 0.5 * rx, (random() - 0.5) * 5 + 0.5 * ry	);
+  }
+
+  for (var i = 0; i < 150; i++)
+  {
+    var x = (random() * 0.5 + 0.25) * canvas.width;
+    var y = (random() * 0.5 + 0.25) * canvas.height;
+    var rx = (y / canvas.height - 0.5) * 12 * rotationK;
+    var ry = -(x / canvas.width - 0.5) * 12 * rotationK;
+
+    createParticle(x, y,
+                   (random() - 0.5) * 10 + 3 * rx, (random() - 0.5) * 10 + 3 * ry	);
+  }
+
+  for (var i = 0; i < 100; i++)
+  {
+    var x = (random() * 0.25 + 0.375) * canvas.width;
+    var y = (random() * 0.25 + 0.375) * canvas.height;
+    var rx = (y / canvas.height - 0.5) * 12 * rotationK;
+    var ry = -(x / canvas.width - 0.5) * 12 * rotationK;
+
+    createParticle(x, y,
+                   (random() - 0.5) * 10 + 10 * rx, (random() - 0.5) * 10 + 10 * ry	);
+  }
+}
+
+function relMouseCoords(event)
+{
+  var totalOffsetX = 0;
+  var totalOffsetY = 0;
+  var canvasX = 0;
+  var canvasY = 0;
+  var currentElement = this;
+
+  do
+  {
+    totalOffsetX += currentElement.offsetLeft;
+    totalOffsetY += currentElement.offsetTop;
+  }
+  while(currentElement = currentElement.offsetParent)
+
+  canvasX = event.pageX - totalOffsetX;
+  canvasY = event.pageY - totalOffsetY;
+
+  return {x:canvasX, y:canvasY}
+}
+
+HTMLCanvasElement.prototype.relMouseCoords = relMouseCoords;
+
+window.onmousedown = function(event)
+{
+  coords = canvas.relMouseCoords(event);
+  cx = coords.x;
+  cy = coords.y;
+
+  if (cx >= 0 && cy >= 160 && cx <= 0 + 40 && cy <= 160 + 40) // velocity vector
+  {
+    spawnVelX = cx - 20;
+    spawnVelY = cy - 180;
+  }
+  else if (cx >= 50 || cy >= 220)
+  {
+    createParticle(cx + random(), cy + random(), spawnVelX * 2.5, spawnVelY * 2.5);
+  }
+}
+
+window.onclick = function(event)
+{
+  coords = canvas.relMouseCoords(event);
+  cx = coords.x;
+  cy = coords.y;
+
+  if (cx > 10 && cy > 10 && cx < 10 + 20 && cy < 10 + 20) // play/pause
+  {
+    timeSpeed = 1 - timeSpeed;
+  }
+  else if (cx > 10 && cy > 50 && cx < 10 + 20 && cy < 50 + 20) // clear
+  {
+    destroyParticles();
+  }
+  else if (cx > 10 && cy > 90 && cx < 10 + 20 && cy < 90 + 20) // clear and create random
+  {
+    destroyParticles();
+    initRandomParticles();
+  }
+}
+
+window.onload = function()
+{
+  canvas = document.getElementById("graphic");
+  context = canvas.getContext("2d");
+  canvas.style.backgroundColor = "#000"
+
+  var currentDate = new Date();
+  initRandomParticles();
+
+  setInterval("update()", 50);
+}
+
+</script>
+</body>
+</html>
