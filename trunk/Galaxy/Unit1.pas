@@ -32,7 +32,7 @@ begin
   Randomize;
 
   fRender := TRender.Create(Handle, ClientWidth, ClientHeight);
-  Galaxy_Create(300, Max(ClientWidth, ClientHeight));
+  Galaxy_Create(500, Max(ClientWidth, ClientHeight));
 
   Application.OnIdle := OnIdle;
   Form1.FormResize(Self);
