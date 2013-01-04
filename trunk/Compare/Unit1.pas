@@ -2,63 +2,71 @@ unit Unit1;
 interface
 
 uses
-  Windows, Messages, ShellAPI, SysUtils, Classes, Graphics, Controls, Forms,
-  StdCtrls, ComCtrls, FileCtrl, ExtCtrls, Dialogs,
-  Unit_TScan, Unit_TSettings, ImgList, KromUtils, KromIOUtils,
+  Windows, Messages, ShellAPI, SysUtils, Classes, Graphics, Controls, Forms, StrUtils,
+  StdCtrls, ComCtrls, FileCtrl, ExtCtrls, Dialogs, XMLDoc, XMLIntf,
+  Unit_TScan, ImgList, KromUtils, KromIOUtils, Unit_Tasks,
   Menus, Math;
 
 type
   TForm1 = class(TForm)
+    ImageList1: TImageList;
+    Panel1: TPanel;
+    Label3: TLabel;
     B_LaunchCompare: TButton;
     DirectoryListBox2: TDirectoryListBox;
     DriveComboBox2: TDriveComboBox;
     Memo1: TMemo;
-    ListView1: TListView;
-    Label1: TLabel;
-    Label2: TLabel;
     B_StopCompare: TButton;
-    B_CopyOver1: TButton;
-    ImageList1: TImageList;
-    ListView2: TListView;
-    B_Delete2: TButton;
     DirectoryListBox1: TDirectoryListBox;
     DriveComboBox1: TDriveComboBox;
-    Bevel1: TBevel;
     RGSyncMode: TRadioGroup;
-    Label3: TLabel;
-    B_AddTask: TButton;
-    B_RemTask: TButton;
-    ListTasks: TListView;
+    btnTaskAdd: TButton;
+    btnTaskRem: TButton;
+    Panel2: TPanel;
+    ListView1: TListView;
+    B_CopyOver1: TButton;
     B_Open1: TButton;
     B_OpenF1: TButton;
     B_Delete1: TButton;
+    Label1: TLabel;
+    Panel3: TPanel;
+    ListView2: TListView;
+    B_Delete2: TButton;
     B_Open2: TButton;
     B_CopyOver2: TButton;
     B_OpenF2: TButton;
+    Label2: TLabel;
+    lstPaths: TListView;
+    lstTasks: TListBox;
+    btnPathAdd: TButton;
+    btnPathRem: TButton;
     procedure FormCreate(Sender: TObject);
-    procedure AcceptFiles( var msg : TMessage ); message WM_DROPFILES;
-    procedure GreyButtons(Grey:boolean);
+    procedure AcceptFiles(var msg: TMessage); message WM_DROPFILES;
     procedure LaunchCompareClick(Sender: TObject);
-    procedure ListViewCustomDrawItem(Sender: TCustomListView;
-      Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure ListViewCustomDrawItem(Sender: TCustomListView; Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure StopCompareClick(Sender: TObject);
     procedure FillLists(ScanID:integer; LV:TListView);
     procedure ListViewDblClick(Sender: TObject);
     procedure B_CopyOverClick(Sender: TObject);
     procedure B_DeleteClick(Sender: TObject);
     procedure ListBox1Click(Sender: TObject);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure AddNewTask(Sender: TObject);
-    procedure RefreshTaskListBox(ID:integer);
-    procedure B_RemTaskClick(Sender: TObject);
+    procedure btnTaskAddClick(Sender: TObject);
+    procedure btnTaskRemClick(Sender: TObject);
     procedure B_OpenClick(Sender: TObject);
-    procedure ListView1SelectItem(Sender: TObject; Item: TListItem;
-      Selected: Boolean);
-
+    procedure ListView1SelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
+    procedure FormResize(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure btnPathAddClick(Sender: TObject);
+    procedure btnPathRemClick(Sender: TObject);
+    procedure lstTasksClick(Sender: TObject);
   private
-    { Private declarations }
+    fTasks: TTasks;
   public
-    { Public declarations }
+    procedure GreyButtons(Grey: Boolean);
+    procedure RefreshTasks(aIndex: Integer);
+    procedure RefreshPaths(aIndex: Integer);
+    procedure LoadSettings(aFile: string);
+    procedure SaveSettings(aFile: string);
   end;
 
 var
@@ -74,29 +82,84 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-DragAcceptFiles(Form1.Handle,true);
-fScan := TScan.Create;
+  ExeDir:=ExtractFilePath(Application.ExeName);
+  DragAcceptFiles(Form1.Handle,true);
 
-GreyButtons(true);
-B_AddTask.Enabled:=true;
-B_RemTask.Enabled:=true;
-B_StopCompare.Enabled:=false;
+  fTasks := TTasks.Create;
+  LoadSettings(ExeDir + 'settings.xml');
 
-ExeDir:=ExtractFilePath(Application.ExeName);
-fSettings:=TSettings.Create(ExeDir+'Compare_tasks.ini');
+  GreyButtons(False);
 
-RefreshTaskListBox(1);
+  RefreshTasks(0);
 end;
 
 
-procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+procedure TForm1.FormDestroy(Sender: TObject);
 begin
-  fSettings.SaveSettingsToFile(ExeDir+'Compare_tasks.ini');
-  CanClose:=true;
-end;   
+  SaveSettings(ExeDir + 'settings.xml');
+  fTasks.Free;
+end;
 
 
-procedure TForm1.AcceptFiles( var msg : TMessage );
+procedure TForm1.FormResize(Sender: TObject);
+begin
+  Panel1.Left := (ClientWidth - Panel1.Width) div 2;
+  Panel2.Width := ClientWidth div 2;
+  Panel3.Width := ClientWidth div 2;
+  Panel3.Left  := ClientWidth - Panel3.Width;
+end;
+
+
+procedure TForm1.LoadSettings(aFile: string);
+var
+  X: IXMLDocument;
+  nodeRoot, nodeTasks: IXMLNode;
+begin
+  if not FileExists(aFile) then
+    Exit;
+
+  X := TXMLDocument.Create(Self);
+  X.LoadFromFile(aFile);
+  X.Active := True;
+
+  nodeRoot := X.DocumentElement;
+
+  //Load Tasks
+  nodeTasks := nodeRoot.ChildNodes['Tasks'];
+  fTasks.LoadFromXML(nodeTasks);
+
+  X := nil;
+end;
+
+
+procedure TForm1.lstTasksClick(Sender: TObject);
+begin
+  RefreshPaths(lstTasks.ItemIndex);
+end;
+
+
+procedure TForm1.SaveSettings(aFile: string);
+var
+  X: IXMLDocument;
+  nodeRoot, nodeTasks: IXMLNode;
+begin
+  X := NewXMLDocument;
+  X.Encoding := 'utf-8';
+  X.Options := [doNodeAutoIndent];
+//  X.Active := True;
+
+  nodeRoot := X.AddChild('Root');
+
+  //Save Tasks
+  nodeTasks := nodeRoot.AddChild('Tasks');
+  fTasks.SaveToXML(nodeTasks);
+
+  X.SaveToFile(aFile);
+  X := nil;
+end;
+
+
+procedure TForm1.AcceptFiles(var msg: TMessage);
 const
   cnMaxFileNameLen = 255;
 var
@@ -107,58 +170,36 @@ begin
   // find out how many files we're accepting
   DropCount := DragQueryFile(msg.WParam, $FFFFFFFF, acFileName, cnMaxFileNameLen);
   // find out where drop occured
-  DragQueryPoint( msg.WParam, DropPoint);
+  DragQueryPoint(msg.WParam, DropPoint);
 
   // query for the file names
-  for i := 1 to DropCount do begin
-    DragQueryFile( msg.WParam, i-1, acFileName, cnMaxFileNameLen );
+  for I := 0 to DropCount - 1 do
+  begin
+    DragQueryFile(msg.WParam, I, acFileName, cnMaxFileNameLen);
 
-    if DropPoint.X<=Form1.Width div 2 then
-      DirectoryListBox1.Directory:=acFileName
+    if DropPoint.X <= Form1.Width div 2 then
+      DirectoryListBox1.Directory := acFileName
     else
-      DirectoryListBox2.Directory:=acFileName;
+      DirectoryListBox2.Directory := acFileName;
   end;
 
-  DragFinish( msg.WParam );
+  DragFinish(msg.WParam);
 end;
 
-procedure TForm1.GreyButtons(Grey:boolean);
-begin
-  B_AddTask.Enabled:=not Grey;
-  B_RemTask.Enabled:=not Grey;
-  B_StopCompare.Enabled:=Grey;
-  if Grey or (ListView1.Items.Count>0) then begin
-    B_CopyOver1.Enabled:=not Grey;
-    B_Open1.Enabled:=not Grey;
-    B_OpenF1.Enabled:=not Grey;
-    B_Delete1.Enabled:=not Grey;
-  end;
-  if Grey or (ListView2.Items.Count>0) then begin
-    B_CopyOver2.Enabled:=not Grey;
-    B_Open2.Enabled:=not Grey;
-    B_OpenF2.Enabled:=not Grey;
-    B_Delete2.Enabled:=not Grey;
-  end;
-  //RGSyncMode.Enabled:=not Grey;
-  Label1.Caption:=inttostr(ListView1.Items.Count)+' entries';
-  Label2.Caption:=inttostr(ListView2.Items.Count)+' entries';
 
-  
-
-end;
-
+//Disable buttons while compare tasks is executed
 procedure TForm1.LaunchCompareClick(Sender: TObject);
 begin
   Memo1.Clear;
 
-  GreyButtons(true);
+  GreyButtons(True);
 
   if fScan<>nil then FreeAndNil(fScan);
 
-  fScan := TScan.Create;
+  fScan := TScan.Create(fTasks[0].ExludeFilter);
 
-  if not fScan.ScanPath(DirectoryListBox1.Directory,1,Label1,Application) then exit;
-  if not fScan.ScanPath(DirectoryListBox2.Directory,2,Label2,Application) then exit;
+  if not fScan.ScanPaths(DirectoryListBox1.Directory, DirectoryListBox2.Directory, Label1, Label2, Application) then
+    Exit;
 
   fScan.FindDifference(1,2);
   fScan.FindDifference(2,1);
@@ -168,13 +209,14 @@ begin
 
   GreyButtons(false);
 
-  Memo1.Lines.Add('Temporary files excluded '+inttostr(fScan.GetExludedCount(1))+' and '+inttostr(fScan.GetExludedCount(2)));
+  Memo1.Lines.Add('Temporary files excluded '+IntToStr(fScan.GetExludedCount(1))+' and '+IntToStr(fScan.GetExludedCount(2)));
 end;
 
-procedure TForm1.ListViewCustomDrawItem(Sender: TCustomListView;
-  Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
+
+procedure TForm1.ListViewCustomDrawItem(Sender: TCustomListView; Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
 begin
-  with Sender do begin
+  with Sender do
+  begin
     Canvas.Brush.Color := $FF00FF;
     if Item.SubItems.Strings[2]='A' then
       Canvas.Brush.Color := $88CC88;
@@ -186,9 +228,10 @@ begin
       Canvas.Brush.Color := $88CCCC;
     Canvas.TextOut(Item.DisplayRect(drLabel).Left+2,
       Item.DisplayRect(drLabel).Top, Item.Caption);
-    DefaultDraw := true;
+    DefaultDraw := True;
   end;
 end;
+
 
 procedure TForm1.StopCompareClick(Sender: TObject);
 begin
@@ -371,57 +414,146 @@ end;
 
 
 procedure TForm1.ListBox1Click(Sender: TObject);
+var I,K: Integer;
 begin
-  if not InRange(ListTasks.ItemIndex+1,1,fSettings.TaskCount) then begin
-    DirectoryListBox1.Directory:=ExeDir;
-    DirectoryListBox1.Directory:=ExeDir;
-    exit;
+  DirectoryListBox1.Directory := ExeDir;
+  DirectoryListBox2.Directory := ExeDir;
+
+  I := lstTasks.ItemIndex;
+  if not InRange(I, 0, fTasks.Count - 1) then Exit;
+
+  K := lstPaths.ItemIndex;
+  if not InRange(K, 0, fTasks[I].Count - 1) then Exit;
+
+  DirectoryListBox1.Directory := fTasks[I].Paths[K].A;
+  DirectoryListBox2.Directory := fTasks[I].Paths[K].B;
+end;
+
+
+procedure TForm1.btnPathAddClick(Sender: TObject);
+var I: Integer;
+begin
+  I := lstTasks.ItemIndex;
+  if not InRange(I, 0, fTasks.Count - 1) then Exit;
+
+  fTasks[I].AddPaths(DirectoryListBox1.Directory, DirectoryListBox2.Directory);
+
+  RefreshPaths(I);
+end;
+
+
+procedure TForm1.btnPathRemClick(Sender: TObject);
+var I: Integer;
+begin
+  I := lstTasks.ItemIndex;
+  if not InRange(I, 0, fTasks.Count - 1) then Exit;
+
+  fTasks[I].Delete(I);
+
+  RefreshPaths(I);
+end;
+
+
+procedure TForm1.btnTaskAddClick(Sender: TObject);
+var
+  T: TTask;
+  NewTitle: string;
+begin
+  NewTitle := 'New Task Name';
+  if not InputQuery('New task title', 'Input task title:', NewTitle) then Exit;
+
+  T := TTask.Create;
+  T.Title := NewTitle;
+  fTasks.Add(T);
+
+  RefreshTasks(fTasks.Count);
+end;
+
+
+procedure TForm1.btnTaskRemClick(Sender: TObject);
+var I: Integer;
+begin
+  I := lstTasks.ItemIndex;
+  if I = -1 then Exit;
+  if MessageBox(Handle, @('Remove the task?' + eol + fTasks[I].Title)[1] , 'Please confirm', MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2 ) <> IDYES then Exit;
+
+  fTasks.Delete(I);
+  RefreshTasks(EnsureRange(I, 0, fTasks.Count - 1));
+end;
+
+
+procedure TForm1.GreyButtons(Grey: Boolean);
+var
+  Act1, Act2: Boolean;
+begin
+  btnTaskAdd.Enabled := not Grey;
+  btnTaskRem.Enabled := not Grey;
+  btnPathAdd.Enabled := not Grey;
+  btnPathRem.Enabled := not Grey;
+
+  B_LaunchCompare.Enabled := not Grey;
+  B_StopCompare.Enabled := Grey;
+
+  Act1 := not Grey and (ListView1.Items.Count > 0);
+  B_CopyOver1.Enabled := Act1;
+  B_Open1.Enabled := Act1;
+  B_OpenF1.Enabled := Act1;
+  B_Delete1.Enabled := Act1;
+
+  Act2 := not Grey and (ListView2.Items.Count > 0);
+  B_CopyOver2.Enabled := Act2;
+  B_Open2.Enabled := Act2;
+  B_OpenF2.Enabled := Act2;
+  B_Delete2.Enabled := Act2;
+
+  Label1.Caption := IntToStr(ListView1.Items.Count) + ' entries';
+  Label2.Caption := IntToStr(ListView2.Items.Count) + ' entries';
+end;
+
+
+procedure TForm1.RefreshTasks(aIndex: Integer);
+var
+  I: Integer;
+begin
+  lstTasks.Clear;
+
+  for I := 0 to fTasks.Count - 1 do
+    lstTasks.Items.Add(fTasks[I].Title);
+
+  if InRange(aIndex, 0, lstTasks.Items.Count - 1) then
+    lstTasks.ItemIndex := aIndex;
+end;
+
+
+procedure TForm1.RefreshPaths(aIndex: Integer);
+  function FirstMatch(A, B: string): Integer;
+  var I: Integer;
+  begin
+    for I := 1 to Min(Length(A), Length(B)) do
+      if A[I] <> B[I] then
+        Break;
+    Result := I;
   end;
-  DirectoryListBox1.Directory:=fSettings.TaskList[ListTasks.ItemIndex+1].PathA;
-  DirectoryListBox2.Directory:=fSettings.TaskList[ListTasks.ItemIndex+1].PathB;
-end;
-
-
-procedure TForm1.AddNewTask(Sender: TObject);
+var
+  I,K,H: Integer;
+  LI: TListItem;
 begin
-  if not fSettings.AddNewTask(
-    InputBox('New task title','Input task title:','New Task Name'),
-    DirectoryListBox1.Directory,
-    DirectoryListBox2.Directory)
-  then
-    MessageBox(Form1.Handle,'Error','Too many tasks',MB_OK);
-  RefreshTaskListBox(fSettings.TaskCount);
-end;
+  lstPaths.Clear;
 
+  I := lstTasks.ItemIndex;
+  if I = -1 then Exit;
 
-procedure TForm1.RefreshTaskListBox(ID:integer);
-var i:integer; ListItem:TListItem;
-begin
-  ListTasks.Clear;
-  for i:=1 to fSettings.TaskCount do begin
-    ListItem:=ListTasks.Items.Add;
-    ListItem.Caption:=fSettings.TaskList[i].Title;
-    ListItem.SubItems.Add(fSettings.TaskList[i].PathA);
-    ListItem.SubItems.Add(fSettings.TaskList[i].PathB);
+  for K := 0 to fTasks[I].Count - 1 do
+  begin
+    H := FirstMatch(fTasks[I].Paths[K].A, fTasks[I].Paths[K].B) - 1;
+    LI := lstPaths.Items.Add;
+    LI.Caption := Copy(fTasks[I].Paths[K].A, 1, H);
+    LI.SubItems.Add(RightStr(fTasks[I].Paths[K].A, Length(fTasks[I].Paths[K].A) - H));
+    LI.SubItems.Add(RightStr(fTasks[I].Paths[K].B, Length(fTasks[I].Paths[K].B) - H));
   end;
 
-  ListTasks.Columns[0].Width:=120;
-  ListTasks.Columns[1].Width:=(ListTasks.Width-120) div 2;
-  ListTasks.Columns[2].Width:=ListTasks.Width-ListTasks.Columns[1].Width-120-4;
-
-  if ID<=ListTasks.Items.Count then
-    ListTasks.ItemIndex:=ID-1;
-end;
-
-
-procedure TForm1.B_RemTaskClick(Sender: TObject);
-var ID:integer;
-begin
-  ID:=ListTasks.ItemIndex+1;
-  if ID=0 then exit;
-  if MessageBox(Form1.Handle,@('Remove the task?'+eol+fSettings.TaskList[ID].PathA+eol+fSettings.TaskList[ID].PathB)[1] ,'Please confirm', MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2 ) <> IDYES then exit;
-  fSettings.RemoveTask(ID);
-  RefreshTaskListBox(EnsureRange(ID,1,fSettings.TaskCount));
+  if InRange(aIndex, 0, lstPaths.Items.Count - 1) then
+    lstPaths.ItemIndex := aIndex;
 end;
 
 
@@ -432,7 +564,7 @@ begin
   if (Sender=B_Open2)or(Sender=B_OpenF2) then begin LV:=ListView2; ID:=2; end;
 
   if LV.SelCount>1 then
-  if MessageBox(Form1.Handle,@('Open '+inttostr(LV.SelCount)+' selected items at once?')[1] ,'Please confirm', MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2 ) <> IDYES then exit;
+  if MessageBox(Handle,@('Open '+inttostr(LV.SelCount)+' selected items at once?')[1] ,'Please confirm', MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2 ) <> IDYES then exit;
 
   for i:=1 to LV.Items.Count do
   if LV.Items[i-1].Selected then begin
