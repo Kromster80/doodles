@@ -4,7 +4,7 @@ uses
   Forms,
   Unit1 in 'Unit1.pas' {Form1},
   Unit_TScan in 'Unit_TScan.pas',
-  Unit_TSettings in 'Unit_TSettings.pas';
+  Unit_Tasks in 'Unit_Tasks.pas';
 
 {$R *.RES}
 

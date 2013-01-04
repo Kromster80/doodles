@@ -1,11 +1,9 @@
 object Form1: TForm1
   Left = 87
   Top = 128
-  BorderIcons = [biSystemMenu, biMinimize]
-  BorderStyle = bsSingle
   Caption = 'Folder Mirror'
   ClientHeight = 617
-  ClientWidth = 1000
+  ClientWidth = 1001
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,307 +12,361 @@ object Form1: TForm1
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
-  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnResize = FormResize
+  DesignSize = (
+    1001
+    617)
   PixelsPerInch = 96
   TextHeight = 13
-  object Label1: TLabel
-    Left = 345
-    Top = 600
-    Width = 151
-    Height = 13
-    Alignment = taRightJustify
-    Caption = 'C:\...\Desktop\Delphi\Compare'
-  end
-  object Label2: TLabel
-    Left = 844
-    Top = 600
-    Width = 152
-    Height = 13
-    Alignment = taRightJustify
-    Caption = 'D:\...\Desktop\Delphi\Compare'
-  end
-  object Bevel1: TBevel
-    Left = 8
-    Top = 214
-    Width = 985
-    Height = 2
-  end
-  object Label3: TLabel
-    Left = 576
-    Top = 88
-    Width = 38
-    Height = 13
-    Caption = 'Info log:'
-  end
-  object B_LaunchCompare: TButton
-    Left = 392
-    Top = 8
-    Width = 129
-    Height = 25
-    Caption = 'Compare'
+  object Panel1: TPanel
+    Left = 0
+    Top = 0
+    Width = 1001
+    Height = 217
+    BevelOuter = bvNone
+    Caption = 'Panel1'
     TabOrder = 0
-    OnClick = LaunchCompareClick
+    object Label3: TLabel
+      Left = 576
+      Top = 88
+      Width = 38
+      Height = 13
+      Caption = 'Info log:'
+    end
+    object B_LaunchCompare: TButton
+      Left = 520
+      Top = 8
+      Width = 129
+      Height = 25
+      Caption = 'Compare'
+      TabOrder = 0
+      OnClick = LaunchCompareClick
+    end
+    object DirectoryListBox2: TDirectoryListBox
+      Left = 792
+      Top = 32
+      Width = 201
+      Height = 177
+      TabOrder = 1
+    end
+    object DriveComboBox2: TDriveComboBox
+      Left = 872
+      Top = 8
+      Width = 121
+      Height = 22
+      DirList = DirectoryListBox2
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 2
+    end
+    object Memo1: TMemo
+      Left = 400
+      Top = 160
+      Width = 385
+      Height = 49
+      TabOrder = 3
+    end
+    object B_StopCompare: TButton
+      Left = 656
+      Top = 8
+      Width = 129
+      Height = 25
+      Caption = 'Stop'
+      Enabled = False
+      TabOrder = 4
+      OnClick = StopCompareClick
+    end
+    object DirectoryListBox1: TDirectoryListBox
+      Left = 8
+      Top = 32
+      Width = 201
+      Height = 177
+      TabOrder = 5
+    end
+    object DriveComboBox1: TDriveComboBox
+      Left = 8
+      Top = 8
+      Width = 120
+      Height = 22
+      DirList = DirectoryListBox1
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 6
+    end
+    object RGSyncMode: TRadioGroup
+      Left = 216
+      Top = 160
+      Width = 177
+      Height = 53
+      Caption = ' Choose sync mode  '
+      Enabled = False
+      ItemIndex = 0
+      Items.Strings = (
+        'Just make a mirror'
+        'Incremental compressed mirror')
+      TabOrder = 7
+    end
+    object btnTaskAdd: TButton
+      Left = 216
+      Top = 8
+      Width = 49
+      Height = 25
+      Caption = 'Add'
+      TabOrder = 8
+      OnClick = btnTaskAddClick
+    end
+    object btnTaskRem: TButton
+      Left = 272
+      Top = 8
+      Width = 65
+      Height = 25
+      Caption = 'Remove'
+      TabOrder = 9
+      OnClick = btnTaskRemClick
+    end
+    object lstPaths: TListView
+      Left = 344
+      Top = 40
+      Width = 441
+      Height = 113
+      Columns = <
+        item
+          Caption = 'From'
+          Width = 210
+        end
+        item
+          Caption = 'To'
+          Width = 210
+        end>
+      GridLines = True
+      HideSelection = False
+      ReadOnly = True
+      RowSelect = True
+      TabOrder = 10
+      ViewStyle = vsReport
+      OnClick = ListBox1Click
+    end
+    object lstTasks: TListBox
+      Left = 216
+      Top = 40
+      Width = 121
+      Height = 113
+      ItemHeight = 13
+      TabOrder = 11
+      OnClick = lstTasksClick
+    end
   end
-  object DirectoryListBox2: TDirectoryListBox
-    Left = 792
-    Top = 32
-    Width = 204
-    Height = 177
-    ItemHeight = 16
+  object Panel2: TPanel
+    Left = 0
+    Top = 216
+    Width = 497
+    Height = 401
+    Anchors = [akLeft, akTop, akBottom]
+    BevelOuter = bvNone
+    Caption = 'Panel2'
     TabOrder = 1
+    DesignSize = (
+      497
+      401)
+    object Label1: TLabel
+      Left = 8
+      Top = 384
+      Width = 151
+      Height = 13
+      Caption = 'C:\...\Desktop\Delphi\Compare'
+    end
+    object ListView1: TListView
+      Left = 8
+      Top = 40
+      Width = 481
+      Height = 341
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      Columns = <
+        item
+          Caption = 'Path'
+        end
+        item
+          Caption = 'Date'
+        end
+        item
+          Caption = 'Size'
+        end
+        item
+          Caption = 'Type'
+        end>
+      GridLines = True
+      HideSelection = False
+      MultiSelect = True
+      ReadOnly = True
+      RowSelect = True
+      SmallImages = ImageList1
+      TabOrder = 0
+      ViewStyle = vsReport
+      OnCustomDrawItem = ListViewCustomDrawItem
+      OnDblClick = ListViewDblClick
+      OnSelectItem = ListView1SelectItem
+    end
+    object B_CopyOver1: TButton
+      Left = 8
+      Top = 8
+      Width = 89
+      Height = 25
+      Caption = 'Copy over   >>>'
+      Enabled = False
+      TabOrder = 1
+      OnClick = B_CopyOverClick
+    end
+    object B_Open1: TButton
+      Left = 104
+      Top = 8
+      Width = 41
+      Height = 25
+      Caption = 'Open'
+      TabOrder = 2
+      OnClick = B_OpenClick
+    end
+    object B_OpenF1: TButton
+      Left = 152
+      Top = 8
+      Width = 105
+      Height = 25
+      Caption = 'Open parent folder'
+      TabOrder = 3
+      OnClick = B_OpenClick
+    end
+    object B_Delete1: TButton
+      Left = 264
+      Top = 8
+      Width = 73
+      Height = 25
+      Caption = 'Delete   XXX'
+      Enabled = False
+      TabOrder = 4
+      OnClick = B_DeleteClick
+    end
   end
-  object DriveComboBox2: TDriveComboBox
-    Left = 876
-    Top = 8
-    Width = 120
-    Height = 22
-    DirList = DirectoryListBox2
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -13
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
+  object Panel3: TPanel
+    Left = 496
+    Top = 216
+    Width = 505
+    Height = 401
+    Anchors = [akLeft, akTop, akBottom]
+    BevelOuter = bvNone
+    Caption = 'Panel3'
     TabOrder = 2
+    DesignSize = (
+      505
+      401)
+    object Label2: TLabel
+      Left = 9
+      Top = 384
+      Width = 152
+      Height = 13
+      Caption = 'D:\...\Desktop\Delphi\Compare'
+    end
+    object ListView2: TListView
+      Left = 8
+      Top = 40
+      Width = 489
+      Height = 341
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      Columns = <
+        item
+          Caption = 'Path'
+        end
+        item
+          Caption = 'Date'
+        end
+        item
+          Caption = 'Size'
+        end
+        item
+          Caption = 'Type'
+        end>
+      GridLines = True
+      HideSelection = False
+      MultiSelect = True
+      ReadOnly = True
+      RowSelect = True
+      SmallImages = ImageList1
+      TabOrder = 0
+      ViewStyle = vsReport
+      OnCustomDrawItem = ListViewCustomDrawItem
+      OnDblClick = ListViewDblClick
+    end
+    object B_Delete2: TButton
+      Left = 264
+      Top = 8
+      Width = 73
+      Height = 25
+      Caption = 'Delete   XXX'
+      Enabled = False
+      TabOrder = 1
+      OnClick = B_DeleteClick
+    end
+    object B_Open2: TButton
+      Left = 104
+      Top = 8
+      Width = 41
+      Height = 25
+      Caption = 'Open'
+      TabOrder = 2
+      OnClick = B_OpenClick
+    end
+    object B_CopyOver2: TButton
+      Left = 8
+      Top = 8
+      Width = 89
+      Height = 25
+      Caption = 'Copy over   <<<'
+      Enabled = False
+      TabOrder = 3
+      OnClick = B_CopyOverClick
+    end
+    object B_OpenF2: TButton
+      Left = 152
+      Top = 8
+      Width = 105
+      Height = 25
+      Caption = 'Open parent folder'
+      TabOrder = 4
+      OnClick = B_OpenClick
+    end
   end
-  object Memo1: TMemo
-    Left = 400
-    Top = 160
-    Width = 385
-    Height = 49
+  object btnPathAdd: TButton
+    Left = 344
+    Top = 8
+    Width = 49
+    Height = 25
+    Caption = 'Add'
     TabOrder = 3
+    OnClick = btnPathAddClick
   end
-  object ListView1: TListView
-    Left = 4
-    Top = 248
-    Width = 493
-    Height = 349
-    Columns = <
-      item
-        Caption = 'Path'
-      end
-      item
-        Caption = 'Date'
-      end
-      item
-        Caption = 'Size'
-      end
-      item
-        Caption = 'Type'
-      end>
-    GridLines = True
-    HideSelection = False
-    MultiSelect = True
-    ReadOnly = True
-    RowSelect = True
-    SmallImages = ImageList1
+  object btnPathRem: TButton
+    Left = 400
+    Top = 8
+    Width = 65
+    Height = 25
+    Caption = 'Remove'
     TabOrder = 4
-    ViewStyle = vsReport
-    OnCustomDrawItem = ListViewCustomDrawItem
-    OnDblClick = ListViewDblClick
-    OnSelectItem = ListView1SelectItem
-  end
-  object B_StopCompare: TButton
-    Left = 528
-    Top = 8
-    Width = 129
-    Height = 25
-    Caption = 'Stop'
-    Enabled = False
-    TabOrder = 5
-    OnClick = StopCompareClick
-  end
-  object B_CopyOver1: TButton
-    Left = 8
-    Top = 220
-    Width = 89
-    Height = 25
-    Caption = 'Copy over   >>>'
-    Enabled = False
-    TabOrder = 6
-    OnClick = B_CopyOverClick
-  end
-  object ListView2: TListView
-    Left = 504
-    Top = 248
-    Width = 493
-    Height = 349
-    Columns = <
-      item
-        Caption = 'Path'
-      end
-      item
-        Caption = 'Date'
-      end
-      item
-        Caption = 'Size'
-      end
-      item
-        Caption = 'Type'
-      end>
-    GridLines = True
-    HideSelection = False
-    MultiSelect = True
-    ReadOnly = True
-    RowSelect = True
-    SmallImages = ImageList1
-    TabOrder = 7
-    ViewStyle = vsReport
-    OnCustomDrawItem = ListViewCustomDrawItem
-    OnDblClick = ListViewDblClick
-  end
-  object B_Delete2: TButton
-    Left = 760
-    Top = 220
-    Width = 73
-    Height = 25
-    Caption = 'Delete   XXX'
-    Enabled = False
-    TabOrder = 8
-    OnClick = B_DeleteClick
-  end
-  object DirectoryListBox1: TDirectoryListBox
-    Left = 4
-    Top = 32
-    Width = 204
-    Height = 177
-    ItemHeight = 16
-    TabOrder = 9
-  end
-  object DriveComboBox1: TDriveComboBox
-    Left = 4
-    Top = 8
-    Width = 120
-    Height = 22
-    DirList = DirectoryListBox1
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -13
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 10
-  end
-  object RGSyncMode: TRadioGroup
-    Left = 216
-    Top = 156
-    Width = 177
-    Height = 53
-    Caption = ' Choose sync mode  '
-    Enabled = False
-    ItemIndex = 0
-    Items.Strings = (
-      'Just make a mirror'
-      'Incremental compressed mirror')
-    TabOrder = 11
-  end
-  object B_AddTask: TButton
-    Left = 216
-    Top = 8
-    Width = 73
-    Height = 25
-    Caption = 'Create task'
-    TabOrder = 12
-    OnClick = AddNewTask
-  end
-  object B_RemTask: TButton
-    Left = 296
-    Top = 8
-    Width = 81
-    Height = 25
-    Caption = 'Remove task'
-    TabOrder = 13
-    OnClick = B_RemTaskClick
-  end
-  object ListTasks: TListView
-    Left = 216
-    Top = 40
-    Width = 569
-    Height = 113
-    Columns = <
-      item
-        Caption = 'Title'
-        Width = 120
-      end
-      item
-        Caption = 'Path A'
-        Width = 220
-      end
-      item
-        Caption = 'Path B'
-        Width = 220
-      end>
-    GridLines = True
-    HideSelection = False
-    ReadOnly = True
-    RowSelect = True
-    TabOrder = 14
-    ViewStyle = vsReport
-    OnClick = ListBox1Click
-  end
-  object B_Open1: TButton
-    Left = 104
-    Top = 220
-    Width = 41
-    Height = 25
-    Caption = 'Open'
-    TabOrder = 15
-    OnClick = B_OpenClick
-  end
-  object B_OpenF1: TButton
-    Left = 152
-    Top = 220
-    Width = 105
-    Height = 25
-    Caption = 'Open parent folder'
-    TabOrder = 16
-    OnClick = B_OpenClick
-  end
-  object B_Delete1: TButton
-    Left = 264
-    Top = 220
-    Width = 73
-    Height = 25
-    Caption = 'Delete   XXX'
-    Enabled = False
-    TabOrder = 17
-    OnClick = B_DeleteClick
-  end
-  object B_Open2: TButton
-    Left = 600
-    Top = 220
-    Width = 41
-    Height = 25
-    Caption = 'Open'
-    TabOrder = 18
-    OnClick = B_OpenClick
-  end
-  object B_CopyOver2: TButton
-    Left = 504
-    Top = 220
-    Width = 89
-    Height = 25
-    Caption = 'Copy over   <<<'
-    Enabled = False
-    TabOrder = 19
-    OnClick = B_CopyOverClick
-  end
-  object B_OpenF2: TButton
-    Left = 648
-    Top = 220
-    Width = 105
-    Height = 25
-    Caption = 'Open parent folder'
-    TabOrder = 20
-    OnClick = B_OpenClick
+    OnClick = btnPathRemClick
   end
   object ImageList1: TImageList
     DrawingStyle = dsTransparent
-    Left = 8
-    Top = 270
+    Left = 24
+    Top = 294
     Bitmap = {
-      494C010101000400040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000500040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

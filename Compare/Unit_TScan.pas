@@ -1,6 +1,6 @@
 unit Unit_TScan;
 interface
-uses Forms, Classes, StdCtrls, Windows, ComCtrls, SysUtils, DateUtils, KromUtils, KromIOUtils;
+uses Forms, Classes, StdCtrls, Windows, ComCtrls, SysUtils, DateUtils, KromUtils, KromIOUtils, Masks;
 
 type
   dtDiffType = (dtAdded,dtOlder,dtNewer,dtContent);
@@ -14,171 +14,186 @@ type
 
 type
   TScan = class
-    private
-      fStopCompare:boolean;
-      fScanPath:array[1..2] of string;
-      ScanResult:array[1..2] of record
-        CurFolder,CurFile:integer;
-        Folders:array of record
-          Name:string;
-          Time:integer;
-          Size:int64; //4GB+
-          ParentID:integer;
-          SubFolderA,SubFolderZ:integer;
-          SubFileA,SubFileZ:integer;
-          CorrespondingID:integer;
-        end;
-        Files:array of record
-          Name:string;
-          Time:integer;
-          Size:int64; //4GB+
-          ParentID:integer;
-          CorrespondingID:integer;
-        end;
+  private
+    fStopCompare: Boolean;
+    fFilters: TStringList;
+    fScanPath:array[1..2] of string;
+    ScanResult:array[1..2] of record
+      CurFolder,CurFile:integer;
+      Folders:array of record
+        Name:string;
+        Time:integer;
+        Size:int64; //4GB+
+        ParentID:integer;
+        SubFolderA,SubFolderZ:integer;
+        SubFileA,SubFileZ:integer;
+        CorrespondingID:integer;
       end;
-      DiffFolderLen:array[1..2] of integer;
-      DiffFolder:array[1..2] of array of TDiffInfo;
-      DiffFileLen:array[1..2] of integer;
-      DiffFile:array[1..2] of array of TDiffInfo;
-
-      ExludedCount:array[1..2]of integer;
-
-      function IsExludeFileName(ScanID:integer; FileName:string):boolean;
-      function GetFullPath(ScanID,FolderID:integer):string;
-      function GetRelativePath(ScanID,FolderID:integer):string;
-      function GetRelativeFileName(ScanID,FileID:integer):string;
-      function GetFolderDateTime(ScanID,FolderID:integer):string;
-      function GetFileDateTime(ScanID,FileID:integer):string;
-      function GetFolderSize(ScanID,FolderID:integer):string;
-      function GetFileSize(ScanID,FileID:integer):string;
-      function CheckParentCorrespondID(ScanID,FolderID:integer):integer;
-      procedure IncParentFoldersSize(ScanID,FolderID:integer; Size:Int64);
-      procedure SearchFolder(ScanID:integer; Path:string; FolderID:integer);
-      procedure CompareFolders(ScanID1,ScanID2,FolderID1,FolderID2:integer);
-      procedure CompareFiles(ScanID1,ScanID2,FolderID1,FolderID2:integer);
-    public
-      constructor Create;
-      destructor Destroy;
-      function ScanPath(Path:string; ScanID:integer; Progress:TLabel; App:TApplication):boolean;
-      procedure StopCompare();
-      procedure FindDifference(ScanID1,ScanID2:integer);
-      procedure FillList(ScanID:integer; LV:TListView);
-      function GetExludedCount(ScanID:integer):integer;
-      function GetPath(ID:integer):string;
+      Files:array of record
+        Name:string;
+        Time:integer;
+        Size:int64; //4GB+
+        ParentID:integer;
+        CorrespondingID:integer;
+      end;
     end;
+    DiffFolderLen:array[1..2] of integer;
+    DiffFolder:array[1..2] of array of TDiffInfo;
+    DiffFileLen:array[1..2] of integer;
+    DiffFile:array[1..2] of array of TDiffInfo;
 
-  var
-    fScan:TScan;
+    ExludedCount:array[1..2]of integer;
+
+    function IsExludeFileName(ScanID:integer; FileName:string):boolean;
+    function GetFullPath(ScanID,FolderID:integer):string;
+    function GetRelativePath(ScanID,FolderID:integer):string;
+    function GetRelativeFileName(ScanID,FileID:integer):string;
+    function GetFolderDateTime(ScanID,FolderID:integer):string;
+    function GetFileDateTime(ScanID,FileID:integer):string;
+    function GetFolderSize(ScanID,FolderID:integer):string;
+    function GetFileSize(ScanID,FileID:integer):string;
+    function CheckParentCorrespondID(ScanID,FolderID:integer):integer;
+    procedure IncParentFoldersSize(ScanID,FolderID:integer; Size:Int64);
+    procedure SearchFolder(ScanID:integer; Path:string; FolderID:integer);
+    procedure CompareFolders(ScanID1,ScanID2,FolderID1,FolderID2:integer);
+    procedure CompareFiles(ScanID1,ScanID2,FolderID1,FolderID2:integer);
+
+    function ScanPath(Path:string; ScanID:integer; Progress:TLabel; App:TApplication):boolean;
+  public
+    constructor Create(aFilter: string);
+    destructor Destroy; override;
+
+    function ScanPaths(aPath1, aPath2: string; aProgress1, aProgress2: TLabel; aApp: TApplication): Boolean;
+    procedure StopCompare;
+    procedure FindDifference(ScanID1,ScanID2:integer);
+    procedure FillList(ScanID:integer; LV:TListView);
+    function GetExludedCount(ScanID:integer):integer;
+    function GetPath(ID:integer):string;
+  end;
+
+
+var
+  fScan: TScan;
+
 
 implementation
-uses Unit_TSettings;
 
-constructor TScan.Create;
+
+{ TScan }
+constructor TScan.Create(aFilter: string);
 begin
-  Inherited;
-  //
+  inherited Create;
+
+  fFilters := TStringList.Create;
+  fFilters.Delimiter := ';';
+  fFilters.StrictDelimiter := True;
+  fFilters.DelimitedText := aFilter;
 end;
+
 
 destructor TScan.Destroy;
 begin
-  //
-  Inherited;
+  fFilters.Free;
+
+  inherited;
 end;
 
 
 {Check wherever filename should be excluded }
-function TScan.IsExludeFileName(ScanID:integer; FileName:string):boolean;
-var i:integer;
+function TScan.IsExludeFileName(ScanID: Integer; FileName: string): Boolean;
+var I: Integer;
 begin
-  Result := false;
-  FileName:=UpperCase(FileName);
-  with fSettings do
-  for i:=1 to FilterCount do
-    if FilterList[i][1]+FilterList[i][2]='*.' then
-      if GetFileExt(FileName)=FilterList[i][3]+FilterList[i][4]+FilterList[i][5] then begin
-        inc(ExludedCount[ScanID]);
-        Result := true;
-      end else
-    else
-    if FileName=FilterList[i] then begin
-      inc(ExludedCount[ScanID]);
-      Result :=  true;
-    end;
+  Result := False;
+  FileName := UpperCase(FileName);
+
+  for I := 0 to fFilters.Count - 1 do
+  if MatchesMask(FileName, fFilters[I]) then
+  begin
+    Inc(ExludedCount[ScanID]);
+    Result := True;
+    Break;
+  end;
 end;
 
 
 {Return full Path for given FolderID/ScanID}
 function TScan.GetFullPath(ScanID,FolderID:integer):string;
-var SearchPath:string;
+var
+  SearchPath: string;
 begin
-  SearchPath:='';
-  while(FolderID<>-1) do begin
-    SearchPath:=ScanResult[ScanID].Folders[FolderID].Name+'\'+SearchPath;
-    FolderID:=ScanResult[ScanID].Folders[FolderID].ParentID;
+  SearchPath := '';
+  while (FolderID <> -1) do
+  begin
+    SearchPath := ScanResult[ScanID].Folders[FolderID].Name + '\' + SearchPath;
+    FolderID := ScanResult[ScanID].Folders[FolderID].ParentID;
   end;
-  Result:=SearchPath;
+  Result := SearchPath;
 end;
 
 
 {Return Path for given FolderID/ScanID except topmost parent folder}
-function TScan.GetRelativePath(ScanID,FolderID:integer):string;
-var SearchPath:string;
+function TScan.GetRelativePath(ScanID, FolderID: integer): string;
+var
+  SearchPath: string;
 begin
-  SearchPath:='';
-  while(FolderID<>0) do begin
-    SearchPath:=ScanResult[ScanID].Folders[FolderID].Name+'\'+SearchPath;
-    FolderID:=ScanResult[ScanID].Folders[FolderID].ParentID;
+  SearchPath := '';
+  while (FolderID <> 0) do
+  begin
+    SearchPath := ScanResult[ScanID].Folders[FolderID].Name + '\' + SearchPath;
+    FolderID := ScanResult[ScanID].Folders[FolderID].ParentID;
   end;
-  Result:=SearchPath;
+  Result := SearchPath;
 end;
 
 
 {Relative filename including path}
 function TScan.GetRelativeFileName(ScanID,FileID:integer):string;
 begin
-  Result:=GetRelativePath(ScanID,ScanResult[ScanID].Files[FileID].ParentID)+ScanResult[ScanID].Files[FileID].Name;
+  Result := GetRelativePath(ScanID, ScanResult[ScanID].Files[FileID].ParentID) + ScanResult[ScanID].Files[FileID].Name;
 end;
 
 
 function TScan.GetFolderDateTime(ScanID,FolderID:integer):string;
 begin
-  DateTimeToString(Result,'c',FileDateToDateTime(ScanResult[ScanID].Folders[FolderID].Time));
+  DateTimeToString(Result, 'c', FileDateToDateTime(ScanResult[ScanID].Folders[FolderID].Time));
 end;
 
 
 function TScan.GetFileDateTime(ScanID,FileID:integer):string;
 begin
-  DateTimeToString(Result,'c',FileDateToDateTime(ScanResult[ScanID].Files[FileID].Time));
+  DateTimeToString(Result, 'c', FileDateToDateTime(ScanResult[ScanID].Files[FileID].Time));
 end;
 
 
 function TScan.GetFolderSize(ScanID,FolderID:integer):string;
 begin
-  Result:=ReturnSize(ScanResult[ScanID].Folders[FolderID].Size);
+  Result := ReturnSize(ScanResult[ScanID].Folders[FolderID].Size);
 end;
 
 
 function TScan.GetFileSize(ScanID,FileID:integer):string;
 begin
-  Result:=ReturnSize(ScanResult[ScanID].Files[FileID].Size);
+  Result := ReturnSize(ScanResult[ScanID].Files[FileID].Size);
 end;
 
 
 function TScan.CheckParentCorrespondID(ScanID,FolderID:integer):integer;
 begin
-  Result:=0;
-  while(FolderID<>0) do begin
-    if ScanResult[ScanID].Folders[FolderID].CorrespondingID=-1 then
-      Result:=-1;
-    FolderID:=ScanResult[ScanID].Folders[FolderID].ParentID;
+  Result := 0;
+  while (FolderID <> 0) do
+  begin
+    if ScanResult[ScanID].Folders[FolderID].CorrespondingID = -1 then
+      Result := -1;
+    FolderID := ScanResult[ScanID].Folders[FolderID].ParentID;
   end;
 end;
 
 
 procedure TScan.IncParentFoldersSize(ScanID,FolderID:integer; Size:Int64);
 begin
-  while(FolderID<>0) do begin
-    inc(ScanResult[ScanID].Folders[FolderID].Size,Size);
+  while (FolderID <> 0) do
+  begin
+    inc(ScanResult[ScanID].Folders[FolderID].Size, Size);
     FolderID := ScanResult[ScanID].Folders[FolderID].ParentID;
   end;
 end;
@@ -231,42 +246,6 @@ begin
   ScanResult[ScanID].CurFile:=k;
 end;
 
-
-function TScan.ScanPath(Path:string; ScanID:integer; Progress:TLabel; App:TApplication):boolean;
-var ScanFolder:integer;
-begin
-  fScanPath[ScanID]:=Path;
-
-  FillChar(ScanResult[ScanID],sizeof(ScanResult[ScanID]),#0);
-  setlength(ScanResult[ScanID].Folders,2);
-  setlength(ScanResult[ScanID].Files,0);
-
-  ScanFolder:=0;
-
-  // set root path
-  ScanResult[ScanID].Folders[0].Name:=Path;
-  ScanResult[ScanID].Folders[0].ParentID:=-1;
-
-  repeat
-    Progress.Caption:=GetRelativePath(ScanID,ScanFolder);
-    Progress.Repaint;
-    App.ProcessMessages;
-    ///sleep(100);
-    if fStopCompare then begin
-      Result:=false;
-      exit;
-    end;
-
-    SearchFolder(ScanID,GetFullPath(ScanID,ScanFolder),ScanFolder);
-    inc(ScanFolder);
-  until(ScanResult[ScanID].Folders[ScanFolder].Name='');
-  Result:=true;
-end;
-
-procedure TScan.StopCompare();
-begin
-  fStopCompare:=true;
-end;
 
 procedure TScan.CompareFolders(ScanID1,ScanID2,FolderID1,FolderID2:integer);
 var i,k:integer;
@@ -399,6 +378,50 @@ end;
 function TScan.GetPath(ID:integer):string;
 begin
   Result := fScanPath[ID];
+end;
+
+
+function TScan.ScanPath(Path:string; ScanID:integer; Progress:TLabel; App:TApplication):boolean;
+var ScanFolder:integer;
+begin
+  fScanPath[ScanID]:=Path;
+
+  FillChar(ScanResult[ScanID],sizeof(ScanResult[ScanID]),#0);
+  setlength(ScanResult[ScanID].Folders,2);
+  setlength(ScanResult[ScanID].Files,0);
+
+  ScanFolder:=0;
+
+  // set root path
+  ScanResult[ScanID].Folders[0].Name:=Path;
+  ScanResult[ScanID].Folders[0].ParentID:=-1;
+
+  repeat
+    Progress.Caption:=GetRelativePath(ScanID,ScanFolder);
+    Progress.Repaint;
+    App.ProcessMessages;
+    ///sleep(100);
+    if fStopCompare then begin
+      Result:=false;
+      exit;
+    end;
+
+    SearchFolder(ScanID,GetFullPath(ScanID,ScanFolder),ScanFolder);
+    inc(ScanFolder);
+  until(ScanResult[ScanID].Folders[ScanFolder].Name='');
+  Result := True;
+end;
+
+
+function TScan.ScanPaths(aPath1, aPath2: string; aProgress1, aProgress2: TLabel; aApp: TApplication): Boolean;
+begin
+  Result := ScanPath(aPath1, 1, aProgress1, aApp) and ScanPath(aPath2, 2, aProgress2, aApp);
+end;
+
+
+procedure TScan.StopCompare;
+begin
+  fStopCompare := true;
 end;
 
 
