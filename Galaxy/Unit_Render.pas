@@ -12,12 +12,12 @@ type
   public
     constructor Create(RenderFrame: HWND; InX,InY: Integer);
     destructor Destroy; override;
-    procedure SetArea(InX,InY: Integer);
+    procedure Resize(aX,aY: Integer);
     procedure RenderResize;
     procedure Render;
   end;
 
-    
+
 var
   fRender: TRender;
 
@@ -38,7 +38,7 @@ begin
   glDisable(GL_LIGHTING);
   glEnable(GL_POINT_SMOOTH);
 
-  SetArea(InX,InY);
+  Resize(InX,InY);
 
   BuildFont(h_DC, 12, FW_BOLD);
   SetupVSync(False);
@@ -53,10 +53,10 @@ begin
 end;
 
 
-procedure TRender.SetArea(InX,InY:integer);
+procedure TRender.Resize(aX,aY: Integer);
 begin
-  fAreaX := max(InX,1);
-  fAreaY := max(InY,1);
+  fAreaX := max(aX, 1);
+  fAreaY := max(aY, 1);
   RenderResize;
 end;
 
@@ -78,20 +78,24 @@ begin
   glClear(GL_COLOR_BUFFER_BIT);
   glLoadIdentity;
 
-  Galaxy_Update;
+  fGalaxy.Update;
 
+    //Temperature glow
     glPointSize(10);
     glBegin(GL_POINTS);
-      for I := 0 to High(Particles) do
+      with fGalaxy do
+      for I := 0 to Count - 1 do
       begin
         glColor4f(Particles[I].Temp * 3, Particles[I].Temp * 1.5, Particles[I].Temp/2, 0.12 + Particles[I].Temp/5);
         glVertex2dv(@Particles[I].Loc);
       end;
     glEnd;
 
+    //Particle
     glPointSize(3);
     glBegin(GL_POINTS);
-      for I := 0 to High(Particles) do
+      with fGalaxy do
+      for I := 0 to Count - 1 do
       begin
         glColor4f(0.05 + Particles[I].Temp*2, 0.35 - Particles[I].Temp/2, 0.5 - Particles[I].Temp, 1 - Particles[I].Temp);
         glVertex2dv(@Particles[I].Loc);
