@@ -10,16 +10,24 @@ type
     procedure FormResize(Sender: TObject);
     procedure FormMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure FormActivate(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     procedure OnIdle(Sender: TObject; var Done: Boolean);
   end;
 
 const
   FPS_INTERVAL = 1000;
+  {$IFDEF GALAXY_SCREENSAVER}
+  CURSOR_HIDE_TIME = 2000;
+  {$ENDIF}
 
 var
   Form1: TForm1;
-  OldTimeFPS,OldFrameTimes,FrameTime,FrameCount:cardinal;
+  {$IFDEF GALAXY_SCREENSAVER}
+  LastCursorMove: Cardinal;
+  {$ENDIF}
+  OldTimeFPS,OldFrameTimes,FrameTime,FrameCount: Cardinal;
 
 
 implementation
@@ -27,12 +35,31 @@ implementation
 uses Unit_Render, Unit_Galaxy;
 
 
+procedure TForm1.FormActivate(Sender: TObject);
+begin
+  {$IFDEF GALAXY_SCREENSAVER}
+  WindowState := wsMaximized;
+  {$ENDIF}
+end;
+
+
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   Randomize;
 
+  {$IFDEF GALAXY_APPLICATION}
+  BorderIcons := [biSystemMenu, biMinimize, biMaximize];
+  BorderStyle := bsSizeable;
+  {$ENDIF}
+
+  {$IFDEF GALAXY_SCREENSAVER}
+  BorderIcons := [];
+  BorderStyle := bsNone;
+  LastCursorMove := GetTickCount;
+  {$ENDIF}
+
+  fGalaxy := TGalaxy.Create(600, Max(ClientWidth, ClientHeight));
   fRender := TRender.Create(Handle, ClientWidth, ClientHeight);
-  Galaxy_Create(500, Max(ClientWidth, ClientHeight));
 
   Application.OnIdle := OnIdle;
   Form1.FormResize(Self);
@@ -41,6 +68,11 @@ end;
 
 procedure TForm1.OnIdle(Sender: TObject; var Done: Boolean);
 begin
+  {$IFDEF GALAXY_SCREENSAVER}
+  if LastCursorMove + CURSOR_HIDE_TIME < GetTickCount then
+    Cursor := crNone;
+  {$ENDIF}
+
   //Counting FPS
   FrameTime := GetTickCount - OldTimeFPS;
   OldTimeFPS := GetTickCount;
@@ -63,26 +95,44 @@ end;
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
   fRender.Free;
+  fGalaxy.Free;
+end;
+
+
+procedure TForm1.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  {$IFDEF GALAXY_SCREENSAVER}
+  //Screen saver should close on any key pressed
+  Close;
+  {$ENDIF}
 end;
 
 
 procedure TForm1.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
   if ssLeft in Shift then
-    Galaxy_Add(X - ClientWidth / 2, Y - ClientHeight / 2);
+    fGalaxy.Add(X - ClientWidth / 2, Y - ClientHeight / 2);
+
+  {$IFDEF GALAXY_SCREENSAVER}
+  Cursor := crDefault;
+  LastCursorMove := GetTickCount; //Screen saver should hide the cursor when its inactive
+  {$ENDIF}
 end;
 
 
 procedure TForm1.FormMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  Galaxy_Add(X - ClientWidth / 2, Y - ClientHeight / 2);
+  fGalaxy.Add(X - ClientWidth / 2, Y - ClientHeight / 2);
 end;
 
 
 procedure TForm1.FormResize(Sender: TObject);
 begin
-  if fRender=nil then exit;
-  fRender.SetArea(ClientWidth, ClientHeight);
+  if fRender = nil then
+    Exit;
+
+  fGalaxy.Resize(ClientWidth, ClientHeight);
+  fRender.Resize(ClientWidth, ClientHeight);
 end;
 
 

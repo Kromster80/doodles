@@ -6,19 +6,27 @@ type
   TVector2f = record X,Y: Double; end;
 
   TParticle = record
-    Loc: TVector2f;
-    Vec: TVector2f;
-    Temp: Double;
+    Loc: TVector2f; //Position
+    Vec: TVector2f; //Vector
+    Temp: Single; //Temperature
+  end;
+
+  TGalaxy = class
+  private
+    fCount: Integer;
+    fRadX, fRadY: Word;
+  public
+    Particles: array of TParticle;
+    constructor Create(aCount: Integer; aRadius: Integer);
+    procedure Add(X, Y: Single);
+    property Count: Integer read fCount;
+    procedure Resize(aX,aY: Integer);
+    procedure Update;
   end;
 
 
-  procedure Galaxy_Create(aCount: Integer; aRadius: Integer);
-  procedure Galaxy_Add(X, Y: Single);
-  procedure Galaxy_Update;
-
-
 var
-  Particles: array of TParticle;
+  fGalaxy: TGalaxy;
 
   GravityK: Word = 100;
   ElastisityK: Word = 250;
@@ -32,18 +40,24 @@ const
   ParticleRadiusSq = ParticleRadius * ParticleRadius;
 
 
-procedure Galaxy_Create(aCount: Integer; aRadius: Integer);
+{ TGalaxy }
+constructor TGalaxy.Create(aCount: Integer; aRadius: Integer);
 var
   I: Integer;
   RotationCoef: Double;
   PX, PY, RX, RY: Double;
 begin
-  SetLength(Particles, aCount);
+  inherited Create;
+
+  fCount := aCount;
+  fRadX := aRadius;
+  fRadY := aRadius;
+  SetLength(Particles, fCount);
 
   RotationCoef := 1.5 + Random * 0.4 + 0.1;
 
-  for I := 0 to High(Particles) do
-  if I <= aCount*5/6 then
+  for I := 0 to fCount - 1 do
+  if I <= fCount*5/6 then
   begin
     PX := (Random - 0.5);
     PY := (Random - 0.5);
@@ -59,7 +73,7 @@ begin
     Particles[I].Temp := 0.1 + Random * 0.15;
   end
   else
-  if I <= aCount*8/9 then
+  if I <= fCount*8/9 then
   begin
     PX := (Random - 0.5) * 0.75;
     PY := (Random - 0.5) * 0.75;
@@ -92,25 +106,32 @@ begin
 end;
 
 
-procedure Galaxy_Add(X, Y: Single);
-var
-  I: Integer;
+procedure TGalaxy.Add(X, Y: Single);
 begin
-  SetLength(Particles, Length(Particles) + 1);
+  if Length(Particles) <= fCount then
+    SetLength(Particles, fCount + 32);
 
-  I := High(Particles);
+  Particles[fCount].Loc.X := X;
+  Particles[fCount].Loc.Y := Y;
 
-  Particles[I].Loc.X := X;
-  Particles[I].Loc.Y := Y;
+  Particles[fCount].Vec.X := (Random - 0.5);
+  Particles[fCount].Vec.Y := (Random - 0.5);
 
-  Particles[I].Vec.X := (Random - 0.5);
-  Particles[I].Vec.Y := (Random - 0.5);
+  Particles[fCount].Temp := 0.2 + Random * 0.35;
 
-  Particles[I].Temp := 0.2 + Random * 0.35;
+  Inc(fCount);
 end;
 
 
-procedure Galaxy_Update;
+procedure TGalaxy.Resize(aX,aY: Integer);
+begin
+  //Update bounds, particles will be clipped in Update
+  fRadX := max(aX div 2, 1);
+  fRadY := max(aY div 2, 1);
+end;
+
+
+procedure TGalaxy.Update;
 var
   RotationCoef: Double;
   PX, PY, RX, RY: Double;
@@ -127,14 +148,14 @@ var
 begin
   Delta := 0.035;
 
-  for I := 0 to High(Particles) do
+  for I := 0 to fCount - 1 do
   begin
     //Move particle
     Particles[I].Loc.X := Particles[I].Loc.X + Particles[I].Vec.X * Delta;
     Particles[I].Loc.Y := Particles[I].Loc.Y + Particles[I].Vec.Y * Delta;
 
     //When particles fly away we return them back as hot
-    if (Sqr(Particles[I].Loc.X) + Sqr(Particles[I].Loc.Y) > Sqr(500)) then
+    if (Abs(Particles[I].Loc.X) > fRadX) or (Abs(Particles[I].Loc.Y) > fRadY) then
     begin
       RotationCoef := 1.5 + Random * 0.4 + 0.1;
 

@@ -110,9 +110,9 @@ procedure ReadLangFile(Sender:TForm; FileName:string; EraseWritten:boolean);
 function RunOpenDialog(Sender:TOpenDialog; Name,Path,Filter:string):boolean;
 function RunSaveDialog(Sender:TSaveDialog; FileName, FilePath, Filter:string; const FileExt:string = ''):boolean;
 
-procedure Triangulate(VerticeCount:integer; Vertice:array of vector3f; out PolyCount:integer; out Polys:array of word; out Result:boolean);
-
 procedure DoClientAreaResize(aForm:TForm);
+
+function CheckDuplicateApplication(aGUID: string): Boolean;
 
 function BrowseURL(const URL: string) : boolean;
 procedure MailTo(Address,Subject,Body:string);
@@ -995,85 +995,15 @@ Result:=Sender.Execute; //Returns "false" if user pressed "Cancel"
 Sender.FileName:=AssureFileExt(Sender.FileName,FileExt);
 end;
 
-procedure Triangulate(VerticeCount:integer; Vertice:array of vector3f; out PolyCount:integer; out Polys:array of word; out Result:boolean);
-var
-  h,ii,ci:integer;
-  n0,n1,n2:integer;
-  SubDrop:array of byte;
-  Tmp:vector3f;
-  PierceTest:boolean;
+
+//Each time we run the check we create an unique Mutex
+//Thus we can check the Mutex and see if another copy of our application is run
+//Win will automatically release the Mutex on application exit
+function CheckDuplicateApplication(aGUID: string): Boolean;
 begin
-
-  setlength(SubDrop,VerticeCount+1);
-  SubDrop[0]:=1;
-
-  n0:=0; ci:=1; ii:=1;
-  repeat
-
-    //Find unused vertice #1
-    h:=0;
-    repeat
-      inc(n0); inc(h);
-      if n0>(VerticeCount) then n0:=1;
-    until((SubDrop[n0]=0)or(h=VerticeCount));
-    if h=VerticeCount then break;
-
-    //Find unused vertice #2
-    h:=0; n1:=n0;
-    repeat
-      inc(n1); inc(h);
-      if n1>(VerticeCount) then n1:=1;
-    until(((n0<>n1)and(SubDrop[n1]=0))or(h=VerticeCount));
-    if h=VerticeCount then break;
-
-    //Find unused vertice #3
-    h:=0; n2:=n1;
-    repeat
-      inc(n2); inc(h);
-      if n2>(VerticeCount) then n2:=1;
-    until(((n0<>n2)and(n1<>n2)and(SubDrop[n2]=0))or(h=VerticeCount));
-    if h=VerticeCount then break;
-
-    //Check which direction poly is facing, should be Down (depends on vertice order and coords system)
-    Normal2Poly(Vertice[n0],Vertice[n1],Vertice[n2],@Tmp);
-    if Tmp.Y<0 then begin
-
-      PierceTest:=false;
-      h:=n2; //Take n0 and n2 as basis and test all other vertices to be on one side
-
-      repeat
-        inc(h); //starting from n2+1
-        if h>(VerticeCount) then h:=1; //wrap
-        if h<>n0 then //ending at n0-1
-          if SubDrop[h]=0 then begin
-            if  InBetween(min(Vertice[n0].X,Vertice[n1].X,Vertice[n2].X),max(Vertice[n0].X,Vertice[n1].X,Vertice[n2].X),Vertice[h].X)
-            and InBetween(min(Vertice[n0].Z,Vertice[n1].Z,Vertice[n2].Z),max(Vertice[n0].Z,Vertice[n1].Z,Vertice[n2].Z),Vertice[h].Z) then
-            begin
-              Normal2Poly(Vertice[n0],Vertice[n2],Vertice[h],@Tmp);
-              if Tmp.Y>0 then PierceTest:=true;
-            end;
-          end;
-      until((PierceTest)or(h=n0));
-
-      if not PierceTest then begin
-        Polys[ci]:=n0;
-        inc(ci);
-        Polys[ci]:=n1;
-        inc(ci);
-        Polys[ci]:=n2;
-        inc(ci);
-        SubDrop[n1]:=1;
-        inc(n0);
-      end;
-    end;
-
-    inc(ii);
-
-  until(ii=1500); //How long to keep looking for more polys
-
-  PolyCount:=(ci-1) div 3;
-
-  Result:= PolyCount <> VerticeCount-2;
+  if CreateMutex(nil, True, PChar(aGUID)) = 0 then
+    RaiseLastOSError;
+  Result := (GetLastError = ERROR_ALREADY_EXISTS);
 end;
 
 
