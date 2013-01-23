@@ -10,7 +10,6 @@ type
     procedure FormResize(Sender: TObject);
     procedure FormMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-    procedure FormActivate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     procedure OnIdle(Sender: TObject; var Done: Boolean);
@@ -35,34 +34,19 @@ implementation
 uses Unit_Render, Unit_Galaxy;
 
 
-procedure TForm1.FormActivate(Sender: TObject);
-begin
-  {$IFDEF GALAXY_SCREENSAVER}
-  WindowState := wsMaximized;
-  {$ENDIF}
-end;
-
-
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   Randomize;
 
-  {$IFDEF GALAXY_APPLICATION}
-  BorderIcons := [biSystemMenu, biMinimize, biMaximize];
-  BorderStyle := bsSizeable;
-  {$ENDIF}
-
   {$IFDEF GALAXY_SCREENSAVER}
-  BorderIcons := [];
-  BorderStyle := bsNone;
   LastCursorMove := GetTickCount;
   {$ENDIF}
 
-  fGalaxy := TGalaxy.Create(600, Max(ClientWidth, ClientHeight));
+  fGalaxy := TGalaxy.Create(550, Max(ClientWidth, ClientHeight));
   fRender := TRender.Create(Handle, ClientWidth, ClientHeight);
 
   Application.OnIdle := OnIdle;
-  Form1.FormResize(Self);
+  FormResize(Self);
 end;
 
 

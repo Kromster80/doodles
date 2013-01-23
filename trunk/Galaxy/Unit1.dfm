@@ -1,23 +1,18 @@
 object Form1: TForm1
   Left = 323
   Top = 236
-  BorderIcons = []
-  BorderStyle = bsNone
   Caption = 'Galaxy'
-  ClientHeight = 627
-  ClientWidth = 808
+  ClientHeight = 600
+  ClientWidth = 800
   Color = clWhite
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  FormStyle = fsStayOnTop
   KeyPreview = True
   OldCreateOrder = False
   Position = poScreenCenter
-  Visible = True
-  OnActivate = FormActivate
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
