@@ -70,9 +70,13 @@ end;
 
 
 procedure TRender.Render;
-const Qty=10;
-var inX,inY:integer;
-var i,k:integer; s,d:cardinal; ss,sd:string;
+const
+  Qty=10;
+var
+  inX,inY:integer;
+  i,k:integer;
+  s,d:cardinal;
+  ss,sd:AnsiString;
 begin
   glClearColor(0, 0, 0, 0);
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
@@ -185,9 +189,10 @@ begin
       glDisable(GL_ALPHA_TEST);
   end;
 
-  if IsCaptions then begin
+  if IsCaptions then
+  begin
     glBlendFunc(GL_ONE,GL_ZERO);
-    glColor4f(1,1,1,1);
+    glColor4f(1,0,0,1);
     glBindTexture(GL_TEXTURE_2D,0);
     for i:=1 to Qty do
     for k:=1 to Qty do
