@@ -107,7 +107,7 @@ begin
   glRasterPos2f(10, fAreaY-20);
   glPrint('Click and drag left mouse button');
   }
-  glFinish;
+  //glFinish;
   SwapBuffers(h_DC);
 end;
 
