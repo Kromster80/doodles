@@ -191,7 +191,7 @@ begin
 end;
 
 
-procedure SetRenderFrame(RenderFrame:HWND; out h_DC: HDC; out h_RC: HGLRC);
+procedure SetRenderFrame(RenderFrame: HWND; out h_DC: HDC; out h_RC: HGLRC);
 begin
   InitOpenGL;
   SetContexts(RenderFrame, 0, h_DC, h_RC);
