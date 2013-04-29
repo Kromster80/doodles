@@ -6,7 +6,9 @@ uses
   Unit_Game in 'Unit_Game.pas',
   Unit_Ingot in 'Unit_Ingot.pas',
   Unit_Render in 'Unit_Render.pas',
-  Unit_Session in 'Unit_Session.pas';
+  Unit_Session in 'Unit_Session.pas',
+  Unit_Deck in 'Unit_Deck.pas',
+  Unit_Pieces in 'Unit_Pieces.pas';
 
 {$R *.RES}
 
