@@ -1,11 +1,13 @@
 unit Unit_Session;
 interface
-uses dglOpenGL, Unit_Ingot;
+uses dglOpenGL, Unit_Deck, Unit_Ingot, Unit_Pieces;
 
 
 type
   TSession = class
   private
+    fPieces: TPiecesCollection;
+    fDeck: TDeck;
     fIngot: TIngot;
 
     fX: Single;
@@ -49,6 +51,10 @@ end;
 
 procedure TSession.New;
 begin
+  fPieces := TPiecesCollection.Create;
+
+  fDeck := TDeck.Create;
+
   fIngot := TIngot.Create;
   fIngot.Init;
 end;
