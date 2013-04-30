@@ -19,6 +19,7 @@ type
     Id: Integer;
     Location: TPieceLoc;
     Selected: Boolean;
+    DeckPosition: TVector2i;
     constructor Create(aVtxBuf, aIndBuf: GLuint);
     procedure Init;
 
@@ -39,6 +40,7 @@ type
     property Count: Integer read GetCount;
     property Selected: Integer read fSelected write SetSelected;
     property Pieces[aIndex: Integer]: TPiece read GetPiece; default;
+    function PieceById(aIndex: Integer): TPiece;
     procedure LoadFromFile(aFilename: string);
   end;
 
@@ -179,11 +181,26 @@ begin
     NewPiece.fPolys[0] := Poly3(0, 2, 1);
     NewPiece.fPolys[1] := Poly3(0, 2, 3);
 
+    NewPiece.DeckPosition := Vector2i(I div 2, 0);
+
     NewPiece.Init;
     fPieces.Add(NewPiece);
   end;
 end;
 
+
+function TPiecesCollection.PieceById(aIndex: Integer): TPiece;
+var
+  I: Integer;
+begin
+  Result := nil;
+  for I := 0 to Count - 1 do
+  if Pieces[I].Id = aIndex then
+  begin
+    Result := Pieces[I];
+    Break;
+  end;
+end;
 
 procedure TPiecesCollection.SetSelected(aValue: Integer);
 begin

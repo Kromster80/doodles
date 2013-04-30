@@ -26,11 +26,20 @@ type
 
   TPoly3 = array [0..2] of Integer;
 
+  function Vector2i(X, Y: Integer): TVector2i;
   function Vector3(X, Y, Z: Single): TVector3f;
+  function Vector4d(X, Y, Z, W: Single): TVector4d;
   function Vertice(X, Y, Z, nx, ny, nz: Single): TVertice;
   function Poly3(A,B,C: Integer): TPoly3;
 
 implementation
+
+
+function Vector2i(X, Y: Integer): TVector2i;
+begin
+  Result.X := X;
+  Result.Y := Y;
+end;
 
 
 function Vector3(X, Y, Z: Single): TVector3f;
@@ -38,6 +47,15 @@ begin
   Result.X := X;
   Result.Y := Y;
   Result.Z := Z;
+end;
+
+
+function Vector4d(X, Y, Z, W: Single): TVector4d;
+begin
+  Result.X := X;
+  Result.Y := Y;
+  Result.Z := Z;
+  Result.W := W;
 end;
 
 

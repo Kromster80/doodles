@@ -4084,19 +4084,19 @@ begin
   //Said that we can safely use planes 2..5 (HW supports at least 6 planes)
 
   //Set up clipping area
-  CP1 := MakeVector(1, 0, 0, -AbsLeft);
+  CP1 := Vector4d(1, 0, 0, -AbsLeft);
   glEnable(GL_CLIP_PLANE2);
   glClipPlane(GL_CLIP_PLANE2, @CP1);
 
-  CP2 := MakeVector(-1, 0, 0, AbsLeft + AbsWidth);
+  CP2 := Vector4d(-1, 0, 0, AbsLeft + AbsWidth);
   glEnable(GL_CLIP_PLANE3);
   glClipPlane(GL_CLIP_PLANE3, @CP2);
 
-  CP3 := MakeVector(0, 1, 0, -AbsTop);
+  CP3 := Vector4d(0, 1, 0, -AbsTop);
   glEnable(GL_CLIP_PLANE4);
   glClipPlane(GL_CLIP_PLANE4, @CP3);
 
-  CP4 := MakeVector(0, -1, 0, AbsTop + AbsHeight);
+  CP4 := Vector4d(0, -1, 0, AbsTop + AbsHeight);
   glEnable(GL_CLIP_PLANE5);
   glClipPlane(GL_CLIP_PLANE5, @CP4);
 

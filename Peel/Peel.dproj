@@ -111,6 +111,7 @@
 			<DCCReference Include="Unit1.pas">
 				<Form>Form1</Form>
 			</DCCReference>
+			<DCCReference Include="Unit_ColorCoder.pas"/>
 			<DCCReference Include="Unit_Controls.pas"/>
 			<DCCReference Include="Unit_ControlsRender.pas"/>
 			<DCCReference Include="Unit_UserInterface.pas"/>
@@ -149,7 +150,7 @@
 						<VersionInfo Name="MajorVer">1</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
 						<VersionInfo Name="Release">0</VersionInfo>
-						<VersionInfo Name="Build">94</VersionInfo>
+						<VersionInfo Name="Build">95</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -161,7 +162,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">1.0.0.94</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">1.0.0.95</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright">freeware</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>

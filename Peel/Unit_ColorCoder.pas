@@ -6,8 +6,13 @@ uses
 type
   TColorCode = (ccNone, ccIngot, ccPiece);  //1..31 are ok
 
+  TColorCodeId = record
+    Code: TColorCode;
+    Id: Integer;
+  end;
+
   procedure SetColorCode(aCode: TColorCode; aId: Integer);
-  procedure GetColorCode(RGBColor: Pointer; var aCode: TColorCode; var aId: Integer);
+  function GetColorCode(RGBColor: Cardinal): TColorCodeId;
 
 
 implementation
@@ -21,10 +26,10 @@ begin
 end;
 
 
-procedure GetColorCode(RGBColor: Pointer; var aCode: TColorCode; var aId: Integer);
+function GetColorCode(RGBColor: Cardinal): TColorCodeId;
 begin
-  aId := PWord(Cardinal(RGBColor))^ + ((PByte(Cardinal(RGBColor) + 2)^) mod 8) * 65536;
-  aCode := TColorCode((PByte(Cardinal(RGBColor) + 2)^) div 8);
+  Result.Id := RGBColor and $07FFFF;
+  Result.Code := TColorCode(RGBColor shr 19);
 end;
 
 

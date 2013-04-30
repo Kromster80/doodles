@@ -314,7 +314,8 @@ begin
   glPushMatrix;
     glTranslatef(x,y,0);
 
-    if SHOW_TEXT_BOUNDS then begin
+    if SHOW_TEXT_BOUNDS then
+    begin
       glColor4f(1,0,0,0.5);
       glPushMatrix;
         glTranslatef(0.5,0.5,0);
@@ -342,7 +343,8 @@ begin
       taRightJustify: glTranslatef(w-TxWidth,0,0);
     end;
 
-    if SHOW_TEXT_BOUNDS then begin
+    if SHOW_TEXT_BOUNDS then
+    begin
       glColor4f(1,0,0,0.5);
       glBegin(GL_LINE_LOOP);
         glVertex2f(0.5,-0.5);
@@ -359,7 +361,7 @@ begin
     begin
       glPushMatrix;
 
-        if aCutLines then
+        if (w <> 0) and aCutLines then
         begin
           StringList[I] := Trim(StringList[I]);
           if (GetStringWidth(StringList[I], aFont) > w) then

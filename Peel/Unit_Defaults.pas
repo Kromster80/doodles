@@ -1,6 +1,6 @@
 unit Unit_Defaults;
 interface
-uses Unit_Vector, Unit_Color;
+uses Unit_Vector, Unit_Color, Unit_ColorCoder;
 
 const
   MENU_DESIGN_X     =     960;
@@ -30,6 +30,10 @@ var
   SHOW_SELECTION_BUFFER: Boolean   = False;
   LOAD_TEX_FROM_RES: Boolean = False;
 
+  fCursor: record
+    X, Y: Integer;
+    Code: TColorCodeId;
+  end;
 
 implementation
 
