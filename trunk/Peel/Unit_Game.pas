@@ -1,7 +1,7 @@
 unit Unit_Game;
 interface
 uses Forms, Controls, Classes, Windows, MMSystem, SysUtils, Math,
-  Unit1, Unit_Session, Unit_Render;
+  Unit1, Unit_Session, Unit_Render, Unit_UserInterface;
 
 
 type
@@ -9,15 +9,15 @@ type
   private
     fExeDir: string;
     fMainForm: TForm1;
-    fRender: TRender;
     fSession: TSession;
-    PrevX, PrevY: Single;
+    fUserInterface: TUserInterface;
     procedure OnIdle(Sender: TObject; var Done: Boolean);
   public
     constructor Create;
     destructor Destroy; override;
     property Session: TSession read fSession;
     procedure NewGame;
+    procedure KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure MouseMove(Shift: TShiftState; X, Y: Integer);
     procedure Render;
@@ -34,6 +34,7 @@ var
 
 
 implementation
+uses Unit_Fonts, Unit_Defaults;
 
 
 { TGame }
@@ -47,14 +48,32 @@ begin
   Application.Title := 'Peely v.alpha';
   Application.CreateForm(TForm1, fMainForm);
   Application.OnIdle := OnIdle;
+
+  fMainForm.OnKeyDown := KeyDown;
+
   fRender := TRender.Create(fMainForm.Handle, 0, 0, fMainForm.ClientWidth, fMainForm.ClientHeight);
+  fFontLib := TLFontLib.Create;
+  fUserInterface := TUserInterface.Create(fMainForm.ClientWidth, fMainForm.ClientHeight);
 end;
 
 
 destructor TGame.Destroy;
 begin
+  fUserInterface.Free;
+  fFontLib.Free;
+  fRender.Free;
 
   inherited;
+end;
+
+
+procedure TGame.KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_F5 then
+    SHOW_TEXT_BOUNDS := not SHOW_TEXT_BOUNDS;
+
+  if Key = VK_F7 then
+    SHOW_CONTROLS_OVERLAYS := not SHOW_CONTROLS_OVERLAYS;
 end;
 
 
@@ -87,18 +106,13 @@ end;
 
 procedure TGame.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  PrevX := X;
-  PrevY := Y;
+  fSession.MouseDown(Button, Shift, X, Y);
 end;
 
 
 procedure TGame.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
-  if ssLeft in Shift then
-    fSession.Rotate((PrevX - X)/1, (PrevY - Y)/1);
-
-  PrevX := X;
-  PrevY := Y;
+  fSession.MouseMove(Shift, X, Y);
 end;
 
 
@@ -106,11 +120,10 @@ procedure TGame.Render;
 begin
   fRender.BeginFrame;
 
-  fRender.Switch(rm3D);
-
   fSession.Render;
 
   fRender.Switch(rm2D);
+  fUserInterface.Render;
 
   fRender.EndFrame;
 end;
@@ -118,7 +131,8 @@ end;
 
 procedure TGame.Resize(aWidth, aHeight: Integer);
 begin
-  fRender.Resize(0, 0, aWidth, aHeight);
+  fRender.Resize(aWidth, aHeight);
+  fUserInterface.Resize(aWidth, aHeight);
 end;
 
 

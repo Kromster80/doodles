@@ -46,6 +46,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<BRCC_IncludePath>.\Common;$(BRCC_IncludePath)</BRCC_IncludePath>
 			<VerInfo_Build>72</VerInfo_Build>
 			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
 			<DCC_ImageBase>00800000</DCC_ImageBase>
@@ -54,8 +55,8 @@
 			<VerInfo_AutoGenVersion>true</VerInfo_AutoGenVersion>
 			<DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
 			<DCC_WriteableConstants>true</DCC_WriteableConstants>
-			<Icon_MainIcon>Aiming_Icon.ico</Icon_MainIcon>
-			<DCC_UnitSearchPath>..\Common;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+			<DCC_UnitSearchPath>.\Common;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
 			<Manifest_File>None</Manifest_File>
 			<DCC_K>false</DCC_K>
@@ -97,6 +98,7 @@
 			<DCC_Optimize>false</DCC_Optimize>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+			<Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.72;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
 			<VerInfo_AutoGenVersion>false</VerInfo_AutoGenVersion>
 			<VerInfo_Locale>1033</VerInfo_Locale>
@@ -109,6 +111,9 @@
 			<DCCReference Include="Unit1.pas">
 				<Form>Form1</Form>
 			</DCCReference>
+			<DCCReference Include="Unit_Controls.pas"/>
+			<DCCReference Include="Unit_ControlsRender.pas"/>
+			<DCCReference Include="Unit_UserInterface.pas"/>
 			<DCCReference Include="Unit_Game.pas"/>
 			<DCCReference Include="Unit_Ingot.pas"/>
 			<DCCReference Include="Unit_Render.pas"/>
@@ -144,7 +149,7 @@
 						<VersionInfo Name="MajorVer">1</VersionInfo>
 						<VersionInfo Name="MinorVer">0</VersionInfo>
 						<VersionInfo Name="Release">0</VersionInfo>
-						<VersionInfo Name="Build">82</VersionInfo>
+						<VersionInfo Name="Build">94</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">False</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -156,7 +161,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">1.0.0.82</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">1.0.0.94</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright">freeware</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>

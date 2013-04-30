@@ -5,20 +5,28 @@ uses dglOpenGL, Unit_Vector;
 type
   TIngot = class
   private
-    fVerts: array of TVector3f;
-    fNorms: array of TVector3f;
+    fVerts: array of TVertice;
     fPolys: array of TPoly3;
-    fVtxShd: GLUint;
-    fIndShd: GLUint;
+    fVtxBuf: GLuint;
+    fIndBuf: GLuint;
+
+    fX: Single;
+    fY: Single;
+    fHead: Single;
+    fPitch: Single;
+    procedure Init; //Create new ingot
   public
     constructor Create;
     destructor Destroy; override;
-    procedure Init; //Create new ingot
+    procedure LoadFromFile(aFilename: string);
+    procedure Move(X,Y: Single);
+    procedure Rotate(X,Y: Single);
     procedure Render;
   end;
 
 
 implementation
+uses Unit_ColorCoder, Unit_Render;
 
 
 { TIngot }
@@ -26,15 +34,15 @@ constructor TIngot.Create;
 begin
   inherited;
 
-  glGenBuffers(1, @fVtxShd);
-  glGenBuffers(1, @fIndShd);
+  glGenBuffers(1, @fVtxBuf);
+  glGenBuffers(1, @fIndBuf);
 end;
 
 
 destructor TIngot.Destroy;
 begin
-  glDeleteBuffers(1, @fVtxShd);
-  glDeleteBuffers(1, @fIndShd);
+  glDeleteBuffers(1, @fVtxBuf);
+  glDeleteBuffers(1, @fIndBuf);
 
   inherited;
 end;
@@ -55,13 +63,13 @@ begin
   begin
     if I = -HeightDiv then
     begin
-      fVerts[J] := Vector3(0, -0.5, 0);
+      fVerts[J] := Vertice(0, -0.5, 0, 0, -0.5, 0);
       Inc(J);
     end
     else
     if I = HeightDiv then
     begin
-      fVerts[J] := Vector3(0, 0.5, 0);
+      fVerts[J] := Vertice(0, 0.5, 0, 0, 0.5, 0);
       Inc(J);
     end
     else
@@ -71,10 +79,7 @@ begin
       X := Sin(Ang) * Sin(((HeightDiv - I) / HeightDiv) / 2 * Pi) / 2;
       Y := Cos(((HeightDiv - I) / HeightDiv) / 2 * Pi) / 2;
       Z := Cos(Ang) * Sin(((HeightDiv - I) / HeightDiv) / 2 * Pi) / 2;
-      fVerts[J] := Vector3(X,Y,Z);
-      fVerts[J].nx := X;
-      fVerts[J].ny := Y;
-      fVerts[J].nz := Z;
+      fVerts[J] := Vertice(X,Y,Z, X,Y,Z);
       Inc(J);
     end;
   end;
@@ -107,28 +112,72 @@ begin
     end;
   end;
 
-  glBindBuffer(GL_ARRAY_BUFFER, fVtxShd);
-  glBufferData(GL_ARRAY_BUFFER, Length(fVerts) * SizeOf(TVector3f), @fVerts[0].X, GL_STREAM_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, fVtxBuf);
+  glBufferData(GL_ARRAY_BUFFER, Length(fVerts) * SizeOf(TVertice), @fVerts[0].X, GL_STREAM_DRAW);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fIndShd);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fIndBuf);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, Length(fPolys) * SizeOf(fPolys[0]), @fPolys[0,0], GL_STREAM_DRAW);
 end;
 
 
-procedure TIngot.Render;
+procedure TIngot.LoadFromFile(aFilename: string);
 begin
+  //Use blank for now
+  Init;
+end;
+
+
+procedure TIngot.Move(X, Y: Single);
+begin
+  fX := fX + X;
+  fY := fY + Y;
+end;
+
+
+procedure TIngot.Rotate(X, Y: Single);
+begin
+  fHead := fHead + X;
+  fPitch := fPitch + Y;
+end;
+
+
+procedure TIngot.Render;
+  procedure SetRenderColor;
+  begin
+    if fRender.IsNormal then
+    begin
+      glColor3f(1,1,1);
+    end
+    else
+    begin
+      SetColorCode(ccIngot, 0);
+    end;
+  end;
+begin
+  glRotatef(fPitch, 1, 0, 0);
+  glRotatef(fHead, 0, 1, 0);
+  glTranslatef(fX, fY, 0);
+
+  SetRenderColor;
+
+  glBindBuffer(GL_ARRAY_BUFFER, fVtxBuf);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fIndBuf);
+
   //Setup vertex and UV layout and offsets
   glEnableClientState(GL_VERTEX_ARRAY);
-  glVertexPointer(3, GL_FLOAT, SizeOf(TVector3f), Pointer(0));
+  glVertexPointer(3, GL_FLOAT, SizeOf(TVertice), Pointer(0));
 
-  glEnableClientState(GL_NORMAL_ARRAY);
-  glNormalPointer(GL_FLOAT, SizeOf(TVector3f), Pointer(12));
+  if fRender.IsNormal then
+  begin
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glNormalPointer(GL_FLOAT, SizeOf(TVertice), Pointer(12));
+  end;
 
   //Here and above OGL requests Pointer, but in fact it's just a number (offset within Array)
   glDrawElements(GL_TRIANGLES, Length(fPolys) * Length(fPolys[0]), GL_UNSIGNED_INT, Pointer(0));
 
   glDisableClientState(GL_VERTEX_ARRAY);
-  //glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  glDisableClientState(GL_NORMAL_ARRAY);
 end;
 
 
