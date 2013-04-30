@@ -3,7 +3,7 @@ interface
 uses Classes, Controls, dglOpenGL, KromOGLUtils, KromUtils, Math, Windows, SysUtils;
 
 type
-  TRenderMode = (rm2D, rm3D);
+  TRenderMode = (rm2D, rmDeck, rm3D);
 
   TRender = class
   private
@@ -11,11 +11,15 @@ type
     h_RC: HGLRC;
     fOpenGL_Vendor, fOpenGL_Renderer, fOpenGL_Version: AnsiString;
     fWidth, fHeight: Word;
-    csCircle: GLUint;
+    function GetVersionInfo: string;
   public
+    IsNormal: Boolean;
     constructor Create(RenderFrame: HWND; aLeft, aTop, aWidth, aHeight: integer);
     destructor Destroy; override;
-    procedure Resize(aLeft, aTop, aWidth, aHeight: Integer);
+    property Width: Word read fWidth;
+    property Height: Word read fHeight;
+    procedure Resize(aWidth, aHeight: Integer);
+    property VersionInfo: string read GetVersionInfo;
     procedure BeginFrame;
     procedure Switch(aMode: TRenderMode);
     procedure EndFrame;
@@ -28,13 +32,19 @@ const
   LightDiff: array [0..3] of GLfloat = (1, 0.9, 1, 1);
 
 
+var
+  fRender: TRender;
+
+
 implementation
+uses
+  Unit_Defaults;
 
 
 constructor TRender.Create(RenderFrame: HWND; aLeft, aTop, aWidth, aHeight: Integer);
 begin
   SetRenderFrame(RenderFrame, h_DC, h_RC);
-  Resize(aLeft, aTop, aWidth, aHeight);
+  Resize(aWidth, aHeight);
 
   fOpenGL_Vendor   := glGetString(GL_VENDOR);
   fOpenGL_Renderer := glGetString(GL_RENDERER);
@@ -59,20 +69,20 @@ begin
   glLightfv(GL_LIGHT0, GL_DIFFUSE, @LightDiff);
 
   BuildFont(h_DC, 12, FW_BOLD);
-  SetupVSync(true);
+  SetupVSync(True);
 end;
 
 
 destructor TRender.Destroy;
 begin
-  wglMakeCurrent(0,0);
+  wglMakeCurrent(0, 0);
   wglDeleteContext(h_RC);
 
   inherited;
 end;
 
 
-procedure TRender.Resize(aLeft, aTop, aWidth, aHeight: Integer);
+procedure TRender.Resize(aWidth, aHeight: Integer);
 begin
   fWidth := Max(aWidth, 1);
   fHeight := Max(aHeight, 1);
@@ -86,14 +96,21 @@ begin
   glLoadIdentity;
 
   case aMode of
-    rm2D: begin
-            glViewport(0, 0, fWidth, fHeight);
-            gluOrtho2D(0, fWidth, fHeight, 0);
-          end;
-    rm3D: begin
-            glViewport(0, 200, fWidth, fHeight - 200);
-            gluPerspective(85, fWidth / (fHeight - 200), 0.1, 10000);
-          end;
+    rm2D:   begin
+              //Whole screen overlay
+              glViewport(0, 0, fWidth, fHeight);
+              glOrtho(0, fWidth, fHeight, 0, -10, 30);
+            end;
+    rmDeck: begin
+              //Deck
+              glViewport(0, 0, fWidth, DECK_HEIGHT);
+              gluOrtho2D(0, fWidth, DECK_HEIGHT/2, -DECK_HEIGHT/2);
+            end;
+    rm3D:   begin
+              //Ingot view
+              glViewport(0, DECK_HEIGHT, fWidth, fHeight - DECK_HEIGHT);
+              gluPerspective(85, fWidth / (fHeight - DECK_HEIGHT), 0.1, 10000);
+            end;
   end;
 
   glMatrixMode(GL_MODELVIEW);
@@ -107,6 +124,8 @@ end;
 procedure TRender.BeginFrame;
 begin
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+
+  IsNormal := True;
 end;
 
 
@@ -116,5 +135,10 @@ begin
   SwapBuffers(h_DC);
 end;
 
+
+function TRender.GetVersionInfo: string;
+begin
+  Result := fOpenGL_Vendor + ' / ' + fOpenGL_Renderer + ' / ' + fOpenGL_Version;
+end;
 
 end.
