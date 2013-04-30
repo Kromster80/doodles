@@ -7,9 +7,7 @@ uses
   dglOpenGL,
   SysUtils, Windows, Forms, Unit_Vector;
 
-type KCode = (kNil=0,kPoint=1,kSpline=2,kSplineAnchor=3,kSplineAnchorLength=4,
-              kPoly=5,kSurface=6,kObject=7,kButton=8);  //1..31 are ok
-
+type
     TColor4 = cardinal;
 
     procedure SetRenderFrameAA(DummyFrame,RenderFrame:HWND; AntiAliasing:byte; out h_DC: HDC; out h_RC: HGLRC);
@@ -24,8 +22,6 @@ type KCode = (kNil=0,kPoint=1,kSpline=2,kSplineAnchor=3,kSplineAnchorLength=4,
     procedure glkQuad(Ax,Ay,Bx,By,Cx,Cy,Dx,Dy:single);
     procedure glkRect(Ax,Ay,Bx,By:single);
     procedure SetupVSync(aVSync: Boolean);
-    procedure kSetColorCode(TypeOfValue:KCode;IndexNum:integer);
-    procedure kGetColorCode(RGBColor:Pointer;var TypeOfValue:KCode;var IndexNum:integer);
 
 const
     MatModeDefaultV:string=
@@ -311,20 +307,6 @@ begin
   end;
 end;
 
-
-procedure kSetColorCode(TypeOfValue:KCode;IndexNum:integer);
-begin
-  glColor4ub(IndexNum mod 256,
-            (IndexNum mod 65536) div 256,    // 1,2,4(524288) 8,16,32,64,128 //0..31
-            (IndexNum mod 524288) div 65536+byte(TypeOfValue)*8,255);
-end;
-
-
-procedure kGetColorCode(RGBColor:Pointer;var TypeOfValue:KCode;var IndexNum:integer);
-begin
-  IndexNum := pword(cardinal(RGBColor))^ + ((pbyte(cardinal(RGBColor) + 2)^) mod 8) * 65536;
-  TypeOfValue := KCode((pbyte(cardinal(RGBColor) + 2)^) div 8);
-end;
 
 procedure glkScale(X: Single);
 begin

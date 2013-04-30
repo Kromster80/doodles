@@ -146,7 +146,7 @@ procedure TIngot.Render;
   begin
     if fRender.IsNormal then
     begin
-      glColor3f(1,1,1);
+      glColor3f(0.8, 1, 0.8);
     end
     else
     begin

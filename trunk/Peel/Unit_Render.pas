@@ -1,16 +1,21 @@
 unit Unit_Render;
 interface
-uses Classes, Controls, dglOpenGL, KromOGLUtils, KromUtils, Math, Windows, SysUtils;
+uses Classes, Controls, dglOpenGL, KromOGLUtils, KromUtils, Math, Windows, SysUtils,
+  Unit_ColorCoder;
 
 type
   TRenderMode = (rm2D, rmDeck, rm3D);
 
   TRender = class
   private
+    PrevTime, PrevFrameTimes, FrameTime, FrameCount: Cardinal;
+    fFPS: string;
+
     h_DC: HDC;
     h_RC: HGLRC;
     fOpenGL_Vendor, fOpenGL_Renderer, fOpenGL_Version: AnsiString;
     fWidth, fHeight: Word;
+
     function GetVersionInfo: string;
   public
     IsNormal: Boolean;
@@ -18,8 +23,10 @@ type
     destructor Destroy; override;
     property Width: Word read fWidth;
     property Height: Word read fHeight;
+    property FPS: string read fFPS;
     procedure Resize(aWidth, aHeight: Integer);
     property VersionInfo: string read GetVersionInfo;
+    function CodeBelow(X,Y: Integer): TColorCodeId;
     procedure BeginFrame;
     procedure Switch(aMode: TRenderMode);
     procedure EndFrame;
@@ -27,6 +34,8 @@ type
 
 
 const
+  FPS_INTERVAL = 1000;
+
   LightPos: array [0..3] of GLfloat = (-20, 20, 20, 0);
   LightSpec: array [0..3] of GLfloat = (0.7, 0.7, 0.7, 0);
   LightDiff: array [0..3] of GLfloat = (1, 0.9, 1, 1);
@@ -59,7 +68,6 @@ begin
 
   glEnable(GL_DEPTH_TEST);
 
-  glClearColor(0.3, 0.3, 0.3, 1);
   glPolygonMode(GL_FRONT, GL_FILL);
 
   glEnable(GL_LIGHTING);
@@ -121,11 +129,28 @@ begin
 end;
 
 
+function TRender.CodeBelow(X, Y: Integer): TColorCodeId;
+var
+  PosX, PosY: Integer;
+  Pixel: Cardinal;
+begin
+  PosX := X;
+  PosY := fHeight - Y - 1;
+
+  glReadPixels(PosX, PosY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, @Pixel);
+  Pixel := Pixel and $FFFFFF;
+  Result := GetColorCode(Pixel);
+end;
+
+
 procedure TRender.BeginFrame;
 begin
-  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+  if IsNormal then
+    glClearColor(0.3, 0.3, 0.3, 1)
+  else
+    glClearColor(0, 0, 0, 1);
 
-  IsNormal := True;
+  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
 end;
 
 
@@ -133,6 +158,20 @@ procedure TRender.EndFrame;
 begin
   glFinish;
   SwapBuffers(h_DC);
+
+  //Calculate FPS
+  FrameTime := GetTickCount - PrevTime;
+  PrevTime := GetTickCount;
+  if FrameTime > 1000 then
+    FrameTime := 1000;
+  Inc(PrevFrameTimes, FrameTime);
+  Inc(FrameCount);
+  if PrevFrameTimes >= FPS_INTERVAL then
+  begin
+    fFPS := FloatToStr(RoundTo(1000 / (PrevFrameTimes / FrameCount), -2)) + ' fps';
+    PrevFrameTimes := 0;
+    FrameCount := 0;
+  end;
 end;
 
 
@@ -140,5 +179,6 @@ function TRender.GetVersionInfo: string;
 begin
   Result := fOpenGL_Vendor + ' / ' + fOpenGL_Renderer + ' / ' + fOpenGL_Version;
 end;
+
 
 end.

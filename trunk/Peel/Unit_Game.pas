@@ -25,16 +25,13 @@ type
   end;
 
 
-const
-  FPS_INTERVAL = 1000;
-
 var
   fGame: TGame;
-  OldTimeFPS,OldFrameTimes,FrameTime,FrameCount: Cardinal;
 
 
 implementation
-uses Unit_Fonts, Unit_Defaults;
+uses
+  Unit_Defaults;
 
 
 { TGame }
@@ -49,10 +46,11 @@ begin
   Application.CreateForm(TForm1, fMainForm);
   Application.OnIdle := OnIdle;
 
+  TimeBeginPeriod(1); //initialize timer precision
+
   fMainForm.OnKeyDown := KeyDown;
 
   fRender := TRender.Create(fMainForm.Handle, 0, 0, fMainForm.ClientWidth, fMainForm.ClientHeight);
-  fFontLib := TLFontLib.Create;
   fUserInterface := TUserInterface.Create(fMainForm.ClientWidth, fMainForm.ClientHeight);
 end;
 
@@ -60,8 +58,9 @@ end;
 destructor TGame.Destroy;
 begin
   fUserInterface.Free;
-  fFontLib.Free;
   fRender.Free;
+
+  TimeEndPeriod(1); //initialize timer precision
 
   inherited;
 end;
@@ -69,11 +68,11 @@ end;
 
 procedure TGame.KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  if Key = VK_F5 then
-    SHOW_TEXT_BOUNDS := not SHOW_TEXT_BOUNDS;
-
-  if Key = VK_F7 then
-    SHOW_CONTROLS_OVERLAYS := not SHOW_CONTROLS_OVERLAYS;
+  case Key of
+    VK_F5: SHOW_TEXT_BOUNDS := not SHOW_TEXT_BOUNDS;
+    VK_F6: SHOW_SELECTION_BUFFER := not SHOW_SELECTION_BUFFER;
+    VK_F7: SHOW_CONTROLS_OVERLAYS := not SHOW_CONTROLS_OVERLAYS;
+  end;
 end;
 
 
@@ -85,22 +84,12 @@ end;
 
 
 procedure TGame.OnIdle(Sender: TObject; var Done: Boolean);
-begin //Counting FPS
-  if not fMainForm.Active then exit;
-
-  FrameTime:=GetTickCount-OldTimeFPS;
-  OldTimeFPS:=GetTickCount;
-  if FrameTime>1000 then FrameTime:=1000;
-  inc(OldFrameTimes,FrameTime);
-  inc(FrameCount);
-  if OldFrameTimes>=FPS_INTERVAL then begin
-    fMainForm.Caption := floattostr(RoundTo(1000/(OldFrameTimes/FrameCount),-2))+' fps';
-    OldFrameTimes:=0;
-    FrameCount:=0;
-  end; //FPS calculation complete
+begin
+  if not fMainForm.Active then
+    exit;
 
   Render;
-  Done := false;
+  Done := False;
 end;
 
 
@@ -112,12 +101,14 @@ end;
 
 procedure TGame.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
+  fUserInterface.MouseMove(Shift, X, Y);
   fSession.MouseMove(Shift, X, Y);
 end;
 
 
 procedure TGame.Render;
 begin
+  fRender.IsNormal := True;
   fRender.BeginFrame;
 
   fSession.Render;
@@ -125,7 +116,15 @@ begin
   fRender.Switch(rm2D);
   fUserInterface.Render;
 
-  fRender.EndFrame;
+  if not SHOW_SELECTION_BUFFER then
+    fRender.EndFrame;
+
+  fRender.IsNormal := False;
+  fRender.BeginFrame;
+  fSession.Render;
+
+  if SHOW_SELECTION_BUFFER then
+    fRender.EndFrame;
 end;
 
 
