@@ -30,10 +30,6 @@ var
   SHOW_SELECTION_BUFFER: Boolean   = False;
   LOAD_TEX_FROM_RES: Boolean = False;
 
-  fCursor: record
-    X, Y: Integer;
-    Code: TColorCodeId;
-  end;
 
 implementation
 

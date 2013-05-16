@@ -25,6 +25,10 @@ type
   end;
 
 
+var
+  fIngot: TIngot;
+
+
 implementation
 uses Unit_ColorCoder, Unit_Render;
 

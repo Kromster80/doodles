@@ -181,7 +181,7 @@ begin
     NewPiece.fPolys[0] := Poly3(0, 2, 1);
     NewPiece.fPolys[1] := Poly3(0, 2, 3);
 
-    NewPiece.DeckPosition := Vector2i(I div 2, 0);
+    NewPiece.DeckPosition := Vector2i(I, 0);
 
     NewPiece.Init;
     fPieces.Add(NewPiece);
