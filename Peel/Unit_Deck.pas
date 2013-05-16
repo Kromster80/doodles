@@ -11,15 +11,16 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure MouseMove(Shift: TShiftState; X, Y: Integer);
+    procedure PiecePick(aPiece: TPiece);
 
     procedure Render;
   end;
 
+var
+  fDeck: TDeck;
 
 implementation
-uses Unit_Defaults, Unit_ColorCoder;
+uses Unit_Cursor, Unit_Defaults, Unit_ColorCoder, Unit_Render;
 
 
 { TDeck }
@@ -37,29 +38,10 @@ begin
 end;
 
 
-procedure TDeck.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var
-  Piece: TPiece;
+//Piece has been picked, rearrange other pieces
+procedure TDeck.PiecePick(aPiece: TPiece);
 begin
-  if fCursor.Code.Code = ccPiece then
-  begin
-    Piece := fPieces.PieceById(fCursor.Code.Id);
-    Piece.Location := plCursor;
-  end;
-
-  todo:
-end;
-
-
-procedure TDeck.MouseMove(Shift: TShiftState; X, Y: Integer);
-var
-  I: Integer;
-begin
-  if Shift = [] then
-  begin
-    I := Round((X - 75) / 75);
-    fPieces.Selected := I;
-  end;
+  //
 end;
 
 

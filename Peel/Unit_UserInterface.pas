@@ -20,7 +20,7 @@ type
 
 
 implementation
-uses Unit_Defaults, Unit_ColorCoder, Unit_Render, Unit_Fonts, Unit_Game;
+uses Unit_Defaults, Unit_ColorCoder, Unit_Cursor, Unit_Render, Unit_Fonts, Unit_Game, Unit_Session;
 
 
 { TUserInterface }
@@ -53,10 +53,8 @@ procedure TUserInterface.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   Code: TColorCodeId;
 begin
-  fCursor.X := X;
-  fCursor.Y := Y;
-  Code := fRender.CodeBelow(fCursor.X, fCursor.Y);
-  Label_String.Caption := Format('%d - %d', [Byte(Code.Code), Code.Id]);
+  Code := fCursor.CodeBelow;
+  Label_String.Caption := Format('X%d:Y%d %s - %d', [fCursor.X, fCursor.Y, CodeString[Code.Code], Code.Id]);
 end;
 
 

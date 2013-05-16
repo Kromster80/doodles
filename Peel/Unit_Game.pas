@@ -31,7 +31,7 @@ var
 
 implementation
 uses
-  Unit_Defaults;
+  Unit_Cursor, Unit_Defaults;
 
 
 { TGame }
@@ -51,6 +51,7 @@ begin
   fMainForm.OnKeyDown := KeyDown;
 
   fRender := TRender.Create(fMainForm.Handle, 0, 0, fMainForm.ClientWidth, fMainForm.ClientHeight);
+  fCursor := TPCursor.Create;
   fUserInterface := TUserInterface.Create(fMainForm.ClientWidth, fMainForm.ClientHeight);
 end;
 
@@ -101,8 +102,8 @@ end;
 
 procedure TGame.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
-  fUserInterface.MouseMove(Shift, X, Y);
   fSession.MouseMove(Shift, X, Y);
+  fUserInterface.MouseMove(Shift, X, Y);
 end;
 
 
@@ -115,6 +116,7 @@ begin
 
   fRender.Switch(rm2D);
   fUserInterface.Render;
+  fCursor.Render;
 
   if not SHOW_SELECTION_BUFFER then
     fRender.EndFrame;

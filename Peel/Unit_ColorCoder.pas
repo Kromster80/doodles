@@ -15,6 +15,10 @@ type
   function GetColorCode(RGBColor: Cardinal): TColorCodeId;
 
 
+const
+  CodeString: array [TColorCode] of string = ('none', 'Ingot', 'Piece');
+
+
 implementation
 
 
