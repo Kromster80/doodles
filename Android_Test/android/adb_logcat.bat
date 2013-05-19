@@ -1,6 +1,6 @@
 REM Adjust these paths to yours
-SET PATH=C:\Programas\android-sdk\tools;C:\Programas\android-sdk\platform-tools\
+SET PATH="C:\Program Files (x86)\Android\android-sdk\tools";"C:\Program Files (x86)\Android\android-sdk\platform-tools\"
 
-adb logcat
+adb logcat -> logcat.log
 
 pause
