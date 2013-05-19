@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <Compiler Value="C:\lazarus\fpc\2.6.0\bin\i386-win32\fpc.exe" Date="1092380949"/>
+  <Params Value=" -MObjFPC -Scghi -WR -O1 -Tlinux -Parm -Xs -XX -vewnhi -l -FiC:\Users\Krom\Desktop\Delphi\Doodles\Android_Test\lib\arm-linux &quot;-FlC:\Program Files (x86)\Android\android-ndk-r7\platforms\android-8\arch-arm\usr\lib&quot; &quot;-FlC:\Program Files (x86)\Android\android-ndk-r7\toolchains\arm-linux-androideabi-4.4.3\prebuilt\windows\lib\gcc\arm-linux-androideabi\4.4.3&quot; -FuC:\Users\Krom\Desktop\Delphi\Doodles\Android_Test\libs -FuC:\Lazarus\lcl\units\arm-linux\customdrawn -FuC:\Lazarus\lcl\units\arm-linux -FuC:\Lazarus\components\lazutils\lib\arm-linux -FuC:\Lazarus\packager\units\arm-linux -FuC:\Users\Krom\Desktop\Delphi\Doodles\Android_Test\ -FUC:\Users\Krom\Desktop\Delphi\Doodles\Android_Test\lib\arm-linux\ -FEC:\Users\Krom\Desktop\Delphi\Doodles\Android_Test\android\libs\armeabi\ -oliblclapp.so -dLCL -dLCLcustomdrawn -dANDROID -Xd -CpARMV6 androidlcltest.lpr"/>
+</CONFIG>
