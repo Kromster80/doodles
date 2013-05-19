@@ -4,7 +4,7 @@
     <PathDelim Value="\"/>
     <Version Value="9"/>
     <BuildModes Active="Release"/>
-    <Units Count="8">
+    <Units Count="9">
       <Unit0>
         <Filename Value="androidlcltest.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -19,22 +19,19 @@
         <ComponentName Value="Form1"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="mainform"/>
-        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="50" Y="22"/>
         <UsageCount Value="24"/>
-        <Loaded Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="android\src\com\pascal\lcltest\LCLActivity.java"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="0"/>
+        <IsVisibleTab Value="True"/>
         <WindowIndex Value="0"/>
         <TopLine Value="665"/>
         <CursorPos X="1" Y="1"/>
         <UsageCount Value="24"/>
-        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Java"/>
       </Unit2>
       <Unit3>
@@ -64,61 +61,28 @@
       <Unit6>
         <Filename Value="gles.pas"/>
         <UnitName Value="gles"/>
-        <EditorIndex Value="3"/>
         <WindowIndex Value="0"/>
         <TopLine Value="621"/>
         <CursorPos X="1" Y="1"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit6>
       <Unit7>
         <Filename Value="egl.pas"/>
         <UnitName Value="egl"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
-        <CursorPos X="1" Y="1"/>
+        <CursorPos X="99" Y="20"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit7>
+      <Unit8>
+        <Filename Value="C:\lazarus\lcl\interfaces\customdrawn\customdrawnint.pas"/>
+        <UnitName Value="CustomDrawnInt"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="25"/>
+        <CursorPos X="3" Y="41"/>
+        <UsageCount Value="10"/>
+      </Unit8>
     </Units>
-    <General>
-      <ActiveWindowIndexAtStart Value="0"/>
-    </General>
-    <JumpHistory Count="8" HistoryIndex="7">
-      <Position1>
-        <Filename Value="mainform.pas"/>
-        <Caret Line="10" Column="58" TopLine="1"/>
-      </Position1>
-      <Position2>
-        <Filename Value="mainform.pas"/>
-        <Caret Line="1" Column="1" TopLine="1"/>
-      </Position2>
-      <Position3>
-        <Filename Value="mainform.pas"/>
-        <Caret Line="21" Column="53" TopLine="1"/>
-      </Position3>
-      <Position4>
-        <Filename Value="mainform.pas"/>
-        <Caret Line="10" Column="59" TopLine="1"/>
-      </Position4>
-      <Position5>
-        <Filename Value="mainform.pas"/>
-        <Caret Line="1" Column="1" TopLine="1"/>
-      </Position5>
-      <Position6>
-        <Filename Value="mainform.pas"/>
-        <Caret Line="10" Column="64" TopLine="1"/>
-      </Position6>
-      <Position7>
-        <Filename Value="mainform.pas"/>
-        <Caret Line="22" Column="50" TopLine="1"/>
-      </Position7>
-      <Position8>
-        <Filename Value="egl.pas"/>
-        <Caret Line="40" Column="5" TopLine="16"/>
-      </Position8>
-    </JumpHistory>
+    <JumpHistory Count="0" HistoryIndex="-1"/>
   </ProjectSession>
 </CONFIG>
