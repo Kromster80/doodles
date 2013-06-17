@@ -59,6 +59,7 @@ type
     procedure btnPathAddClick(Sender: TObject);
     procedure btnPathRemClick(Sender: TObject);
     procedure lstTasksClick(Sender: TObject);
+    procedure lstPathsItemChecked(Sender: TObject; Item: TListItem);
   private
     fTasks: TTasks;
   public
@@ -82,21 +83,22 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  ExeDir:=ExtractFilePath(Application.ExeName);
+  ExeDir := ExtractFilePath(Application.ExeName);
   DragAcceptFiles(Form1.Handle,true);
 
   fTasks := TTasks.Create;
-  LoadSettings(ExeDir + 'settings.xml');
+  LoadSettings(ExeDir + 'compare_settings.xml');
 
   GreyButtons(False);
 
   RefreshTasks(0);
+  RefreshPaths(lstTasks.ItemIndex);
 end;
 
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
-  SaveSettings(ExeDir + 'settings.xml');
+  SaveSettings(ExeDir + 'compare_settings.xml');
   fTasks.Free;
 end;
 
@@ -129,6 +131,22 @@ begin
   fTasks.LoadFromXML(nodeTasks);
 
   X := nil;
+end;
+
+
+procedure TForm1.lstPathsItemChecked(Sender: TObject; Item: TListItem);
+var
+  I,K: Integer;
+  Pair: TPair;
+begin
+  I := lstTasks.ItemIndex;
+  if I = -1 then Exit;
+
+  K := Item.Index;
+
+  Pair := fTasks[I].Paths[K];
+  Pair.Checked := Item.Checked;
+  fTasks[I].Paths[K] := Pair;
 end;
 
 
@@ -189,12 +207,17 @@ end;
 
 //Disable buttons while compare tasks is executed
 procedure TForm1.LaunchCompareClick(Sender: TObject);
+var
+  I,K: Integer;
 begin
+  I := lstTasks.ItemIndex;
+  if I = -1 then Exit;
+
   Memo1.Clear;
 
   GreyButtons(True);
 
-  if fScan<>nil then FreeAndNil(fScan);
+  FreeAndNil(fScan);
 
   fScan := TScan.Create(fTasks[0].ExludeFilter);
 
@@ -547,9 +570,10 @@ begin
   begin
     H := FirstMatch(fTasks[I].Paths[K].A, fTasks[I].Paths[K].B) - 1;
     LI := lstPaths.Items.Add;
-    LI.Caption := Copy(fTasks[I].Paths[K].A, 1, H);
-    LI.SubItems.Add(RightStr(fTasks[I].Paths[K].A, Length(fTasks[I].Paths[K].A) - H));
+    //LI.Caption := 'Caption' + Copy(fTasks[I].Paths[K].A, 1, H);
+    LI.Caption := RightStr(fTasks[I].Paths[K].A, Length(fTasks[I].Paths[K].A) - H);
     LI.SubItems.Add(RightStr(fTasks[I].Paths[K].B, Length(fTasks[I].Paths[K].B) - H));
+    LI.Checked := True;
   end;
 
   if InRange(aIndex, 0, lstPaths.Items.Count - 1) then
