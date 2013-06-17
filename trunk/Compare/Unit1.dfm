@@ -139,15 +139,17 @@ object Form1: TForm1
       Top = 40
       Width = 441
       Height = 113
+      Checkboxes = True
       Columns = <
         item
           Caption = 'From'
-          Width = 210
+          Width = 180
         end
         item
           Caption = 'To'
-          Width = 210
+          Width = 180
         end>
+      ColumnClick = False
       GridLines = True
       HideSelection = False
       ReadOnly = True
@@ -155,6 +157,7 @@ object Form1: TForm1
       TabOrder = 10
       ViewStyle = vsReport
       OnClick = ListBox1Click
+      OnItemChecked = lstPathsItemChecked
     end
     object lstTasks: TListBox
       Left = 216

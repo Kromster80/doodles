@@ -6,6 +6,7 @@ uses Classes, Generics.Collections, SysUtils, XMLIntf;
 type
   TPair = record
     A,B: string;
+    Checked: Boolean;
   end;
 
   TTask = class
@@ -110,6 +111,7 @@ begin
   begin
     Pair.A := NPaths.ChildNodes[I].Attributes['From'];
     Pair.B := NPaths.ChildNodes[I].Attributes['To'];
+    Pair.Checked := NPaths.ChildNodes[I].HasAttribute('Checked') and NPaths.ChildNodes[I].Attributes['Checked'];
     fPaths.Add(Pair);
   end;
 
@@ -131,6 +133,7 @@ begin
     N := NPaths.AddChild('Path' + IntToStr(I));
     N.Attributes['From'] := fPaths[I].A;
     N.Attributes['To'] := fPaths[I].B;
+    N.Attributes['Chcked'] := fPaths[I].Checked;
   end;
 
   NFilters := aNode.AddChild('Filters');
