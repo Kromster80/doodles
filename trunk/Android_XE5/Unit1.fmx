@@ -2,19 +2,18 @@ object Form1: TForm1
   Left = 0
   Top = 0
   Caption = 'Form1'
-  ClientHeight = 567
-  ClientWidth = 384
+  ClientHeight = 508
+  ClientWidth = 320
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [dkDesktop]
   OnCreate = Form3DCreate
-  OnDestroy = Form3DDestroy
   OnRender = Form3DRender
   DesignerMobile = True
-  DesignerWidth = 384
-  DesignerHeight = 592
-  DesignerDeviceName = 'Google Nexus 4'
-  DesignerOrientation = 0
+  DesignerWidth = 320
+  DesignerHeight = 533
+  DesignerDeviceName = 'Samsung Galaxy S2'
+  DesignerOrientation = 2
   DesignerOSVersion = ''
   object Timer1: TTimer
     Interval = 100
