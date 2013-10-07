@@ -233,8 +233,10 @@
                 </Source>
             </Delphi.Personality>
             <Deployment>
-                <DeployFile LocalName="Android\Debug\libProject2.so" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Android"/>
+                <DeployFile LocalName="c:\program files (x86)\embarcadero\rad studio\12.0\lib\android\debug\classes.dex" Configuration="Debug" Class="AndroidClassesDexFile">
+                    <Platform Name="Android">
+                        <RemoteName>classes.dex</RemoteName>
+                    </Platform>
                 </DeployFile>
                 <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png" Configuration="Debug" Class="Android_LauncherIcon36">
                     <Platform Name="Android">
@@ -260,6 +262,21 @@
                         <RemoteName>ic_launcher.png</RemoteName>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="Tiles512.tga" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>assets\internal</RemoteDir>
+                        <RemoteName>Tiles512.tga</RemoteName>
+                    </Platform>
+                    <Platform Name="iOSDevice">
+                        <RemoteName>Tiles512.tga</RemoteName>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <RemoteName>Tiles512.tga</RemoteName>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <RemoteName>Tiles512.tga</RemoteName>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="C:\Program Files (x86)\Android\android-ndk-r9\prebuilt\android-arm\gdbserver\gdbserver" Configuration="Debug" Class="AndroidGDBServer">
                     <Platform Name="Android"/>
                 </DeployFile>
@@ -268,12 +285,10 @@
                         <RemoteName>ic_launcher.png</RemoteName>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="c:\program files (x86)\embarcadero\rad studio\12.0\lib\android\debug\classes.dex" Configuration="Debug" Class="AndroidClassesDexFile">
-                    <Platform Name="Android">
-                        <RemoteName>classes.dex</RemoteName>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="Android\Debug\AndroidManifest.xml" Configuration="Debug" Class="ProjectAndroidManifest">
+                    <Platform Name="Android"/>
+                </DeployFile>
+                <DeployFile LocalName="Android\Debug\libProject2.so" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Android"/>
                 </DeployFile>
                 <DeployClass Required="true" Name="DependencyPackage">
