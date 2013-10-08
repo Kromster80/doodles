@@ -104,16 +104,16 @@ begin
   glLoadIdentity;
 
   glPushMatrix;
-  glTranslatef(fAreaX/2, fAreaY/2, 0);
+  glTranslatef(fAreaX / 2, fAreaY / 2, 0);
 
   //Timestamps of flight distance
   glPointSize(12);
   for i := 1 to round(max(fAiming.GetTime, 5) * 5) do
   begin
     if i mod 5 = 0 then
-      glColor3f(0.5,0.5,0.5)
+      glColor3f(0.5, 0.5, 0.5)
     else
-      glColor3f(0.9,0.9,0.9);
+      glColor3f(0.9, 0.9, 0.9);
     glPushMatrix;
     glScalef(fAiming.ArrowSpeed * i / 5, fAiming.ArrowSpeed * i / 5, fAiming.ArrowSpeed * i / 5);
     glCallList(csCircle);
@@ -121,9 +121,9 @@ begin
   end;
 
   //Start and Target
-  glColor3f(0,0,0);
+  glColor3f(0, 0, 0);
   glBegin(GL_POINTS);
-    glvertex2f(0,0);
+    glVertex2f(0, 0);
     glvertex2fv(@fAiming.TargetPosition);
   glEnd;
 
@@ -138,7 +138,7 @@ begin
   glPointSize(8);
 
   //Timestamps of target movement
-  glColor3f(0.5,0.5,0.5);
+  glColor3f(0.5, 0.5, 0.5);
   glBegin(GL_POINTS);
     for i := 1 to round(max(fAiming.GetTime, 5)) do
       glvertex2f(fAiming.GetTarget(i).X, fAiming.GetTarget(i).Y);
@@ -146,7 +146,7 @@ begin
 
   if fAiming.GetHit then
   begin
-    glColor3f(1,0,0);
+    glColor3f(1, 0, 0);
     glPointSize(10);
 
     //Target hit
@@ -156,7 +156,7 @@ begin
 
     //Arrow flight vector
     glBegin(GL_LINES);
-      glvertex2f(0,0);
+      glVertex2f(0, 0);
       glvertex2f(fAiming.GetTarget(fAiming.GetTime).X, fAiming.GetTarget(fAiming.GetTime).Y);
     glEnd;
   end;
@@ -165,12 +165,13 @@ begin
 
   if fAiming.GetHit then
   begin
-    glColor3f(1,0,0);
-    glRasterPos2f(10, fAreaY-60);
+    glColor3f(1, 0, 0);
+    glRasterPos2f(10, fAreaY - 60);
     glPrint('Target will be hit in ' + FloatToStr(RoundTo(fAiming.GetTime, -3)) + ' seconds');
-  end else
+  end
+  else
   begin
-    glColor3f(0,0.6,0);
+    glColor3f(0, 0.6, 0);
     glRasterPos2f(10, fAreaY - 60);
     glPrint('Target will never be hit');
   end;
