@@ -16,13 +16,13 @@ type
   end;
 
 const
-      FPS_INTERVAL      =    1000;
+  FPS_INTERVAL      =    1000;
 
 var
   Form1: TForm1;
-  ExeDir:string;
+  ExeDir: string;
 
-  OldTimeFPS,OldFrameTimes,FrameTime,FrameCount:cardinal;
+  OldTimeFPS, OldFrameTimes, FrameTime, FrameCount: Cardinal;
 
 
 implementation
@@ -48,16 +48,18 @@ procedure TForm1.OnIdle(Sender: TObject; var Done: Boolean);
 begin //Counting FPS
   if not Form1.Active then exit;
 
-  FrameTime:=GetTickCount-OldTimeFPS;
-  OldTimeFPS:=GetTickCount;
-  if FrameTime>1000 then FrameTime:=1000;
-  inc(OldFrameTimes,FrameTime);
+  FrameTime := GetTickCount - OldTimeFPS;
+  OldTimeFPS := GetTickCount;
+  if FrameTime > 1000 then
+    FrameTime := 1000;
+  inc(OldFrameTimes, FrameTime);
   inc(FrameCount);
-  if OldFrameTimes>=FPS_INTERVAL then begin
-    Caption := floattostr(RoundTo(1000/(OldFrameTimes/FrameCount),-2))+' fps';
-    OldFrameTimes:=0;
-    FrameCount:=0;
-  end; //FPS calculation complete
+  if OldFrameTimes >= FPS_INTERVAL then
+  begin
+    Caption := floattostr(RoundTo(1000 / (OldFrameTimes / FrameCount), -2)) + ' fps';
+    OldFrameTimes := 0;
+    FrameCount := 0;
+  end; // FPS calculation complete
 
   fRender.Render;
   Done := false;
@@ -73,7 +75,8 @@ end;
 
 procedure TForm1.FormResize(Sender: TObject);
 begin
-  if fRender=nil then exit;
+  if fRender = nil then
+    Exit;
   fRender.SetArea(ClientWidth, ClientHeight);
 end;
 
@@ -99,4 +102,3 @@ end;
 
 
 end.
-
