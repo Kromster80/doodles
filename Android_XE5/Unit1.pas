@@ -197,7 +197,7 @@ begin
 
   ms := TMemoryStream.Create;
   try
-    ms.LoadFromFile(TPath.Combine(TPath.GetDocumentsPath, 'Tiles512.tga'));
+    ms.LoadFromFile('/storage/sdcard/xe5/Tiles512.tga');
     ms.Position := 0;
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -270,7 +270,7 @@ end;
 
 procedure TForm1.Timer1Timer(Sender: TObject);
 begin
-  InvalidateRect(RectF(0, 0, width, height));
+  Invalidate;
 end;
 
 
