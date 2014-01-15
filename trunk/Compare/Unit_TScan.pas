@@ -5,7 +5,8 @@ uses Forms, Classes, StdCtrls, Windows, ComCtrls, SysUtils, DateUtils, KromUtils
 type
   dtDiffType = (dtAdded,dtOlder,dtNewer,dtContent);
 
-type
+  TCompareSide = (csLeft, csRight);
+
   TDiffInfo = record
     ScanID: Integer;
     ItemID: Integer;
@@ -21,6 +22,7 @@ type
     SubFileA, SubFileZ: Integer;
     CorrespondingID: Integer;
   end;
+
   TCompareFile = record
     Name: string;
     Time: Integer;
@@ -34,12 +36,13 @@ type
   private
     fStopCompare: Boolean;
     fFilters: TStringList;
-    fScanPath: array[1..2] of string;
-    ScanResult: array[1..2] of record
+    fScanPath: array [1..2] of string;
+    ScanResult: array [1..2] of record
       CurFolder, CurFile: Integer;
       Folders: array of TCompareFolder;
       Files: array of TCompareFile;
     end;
+
     DiffFolderLen: array [1..2] of integer;
     DiffFolder: array [1..2] of array of TDiffInfo;
     DiffFileLen: array [1..2] of integer;
@@ -61,17 +64,18 @@ type
     procedure CompareFolders(ScanID1,ScanID2,FolderID1,FolderID2:integer);
     procedure CompareFiles(ScanID1,ScanID2,FolderID1,FolderID2:integer);
 
-    function ScanPath(Path:string; ScanID:integer; Progress:TLabel; App:TApplication):boolean;
+    function ScanPath(aPath:string; aSide:integer; aProgress:TLabel; aApp:TApplication):boolean;
   public
     constructor Create(aFilter: string);
     destructor Destroy; override;
 
+    procedure Clear(aSide: Byte);
     function ScanPaths(aPath1, aPath2: string; aProgress1, aProgress2: TLabel; aApp: TApplication): Boolean;
     procedure StopCompare;
     procedure FindDifference(ScanID1,ScanID2:integer);
     procedure FillList(ScanID:integer; LV:TListView);
     function GetExludedCount(ScanID:integer):integer;
-    function GetPath(ID:integer):string;
+    function GetPath(ID: Byte): string;
   end;
 
 
@@ -379,46 +383,61 @@ begin
   Result := ExludedCount[ScanID];
 end;
 
-function TScan.GetPath(ID:integer):string;
+function TScan.GetPath(ID: Byte): string;
 begin
   Result := fScanPath[ID];
 end;
 
 
-function TScan.ScanPath(Path:string; ScanID:integer; Progress:TLabel; App:TApplication):boolean;
-var ScanFolder:integer;
+function TScan.ScanPath(aPath: string; aSide: integer; aProgress: TLabel; aApp: TApplication): Boolean;
+var
+  curFolder: Integer;
 begin
-  fScanPath[ScanID]:=Path;
+  fScanPath[aSide] := aPath;
 
-  FillChar(ScanResult[ScanID],sizeof(ScanResult[ScanID]),#0);
-  setlength(ScanResult[ScanID].Folders,2);
-  setlength(ScanResult[ScanID].Files,0);
-
-  ScanFolder:=0;
+  curFolder := 0;
 
   // set root path
-  ScanResult[ScanID].Folders[0].Name:=Path;
-  ScanResult[ScanID].Folders[0].ParentID:=-1;
+  SetLength(ScanResult[aSide].Folders, 1);
+  ScanResult[aSide].Folders[0].Name := aPath;
+  ScanResult[aSide].Folders[0].ParentID := -1;
 
   repeat
-    Progress.Caption:=GetRelativePath(ScanID,ScanFolder);
-    Progress.Repaint;
-    App.ProcessMessages;
-    ///sleep(100);
-    if fStopCompare then begin
-      Result:=false;
-      exit;
+    aProgress.Caption := GetRelativePath(aSide, curFolder);
+    aProgress.Repaint;
+    aApp.ProcessMessages;
+
+    //sleep(100);
+    if fStopCompare then
+    begin
+      Result := False;
+      Exit;
     end;
 
-    SearchFolder(ScanID,GetFullPath(ScanID,ScanFolder),ScanFolder);
-    inc(ScanFolder);
-  until(ScanResult[ScanID].Folders[ScanFolder].Name='');
+    SearchFolder(aSide, GetFullPath(aSide, curFolder), curFolder);
+    Inc(curFolder);
+  until (ScanResult[aSide].Folders[curFolder].Name = '');
+
   Result := True;
+end;
+
+
+procedure TScan.Clear(aSide: Byte);
+begin
+  fScanPath[aSide] := '';
+  ScanResult[aSide].CurFolder := 0;
+  ScanResult[aSide].CurFile := 0;
+  SetLength(ScanResult[aSide].Folders, 0);
+  SetLength(ScanResult[aSide].Files, 0);
+  ExludedCount[aSide] := 0;
 end;
 
 
 function TScan.ScanPaths(aPath1, aPath2: string; aProgress1, aProgress2: TLabel; aApp: TApplication): Boolean;
 begin
+  Clear(1);
+  Clear(2);
+
   Result := ScanPath(aPath1, 1, aProgress1, aApp) and ScanPath(aPath2, 2, aProgress2, aApp);
 end;
 
