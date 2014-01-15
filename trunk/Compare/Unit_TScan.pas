@@ -58,11 +58,11 @@ type
     function GetFileDateTime(ScanID,FileID:integer):string;
     function GetFolderSize(ScanID,FolderID:integer):string;
     function GetFileSize(ScanID,FileID:integer):string;
-    function CheckParentCorrespondID(ScanID,FolderID:integer):integer;
+    function DiffCheckParentCorrespondID(ScanID,FolderID:integer):integer;
     procedure IncParentFoldersSize(ScanID,FolderID:integer; Size:Int64);
     procedure SearchFolder(ScanID:integer; Path:string; FolderID:integer);
-    procedure CompareFolders(ScanID1,ScanID2,FolderID1,FolderID2:integer);
-    procedure CompareFiles(ScanID1,ScanID2,FolderID1,FolderID2:integer);
+    procedure DiffFolders(ScanID1,ScanID2,FolderID1,FolderID2:integer);
+    procedure DiffFiles(ScanID1,ScanID2,FolderID1,FolderID2:integer);
 
     function ScanPath(aPath:string; aSide:integer; aProgress:TLabel; aApp:TApplication):boolean;
   public
@@ -185,7 +185,7 @@ begin
 end;
 
 
-function TScan.CheckParentCorrespondID(ScanID,FolderID:integer):integer;
+function TScan.DiffCheckParentCorrespondID(ScanID,FolderID:integer):integer;
 begin
   Result := 0;
   while (FolderID <> 0) do
@@ -255,7 +255,7 @@ begin
 end;
 
 
-procedure TScan.CompareFolders(ScanID1,ScanID2,FolderID1,FolderID2:integer);
+procedure TScan.DiffFolders(ScanID1,ScanID2,FolderID1,FolderID2:integer);
 var i,k:integer;
 begin
   if (ScanResult[ScanID1].Folders[FolderID1].SubFolderA=0)or
@@ -283,7 +283,7 @@ begin
   end;
 end;
 
-procedure TScan.CompareFiles(ScanID1,ScanID2,FolderID1,FolderID2:integer);
+procedure TScan.DiffFiles(ScanID1,ScanID2,FolderID1,FolderID2:integer);
 var i,k:integer; dt:dtDiffType;
 begin
   if (ScanResult[ScanID1].Folders[FolderID1].SubFileA=0)
@@ -331,21 +331,21 @@ begin
   FillChar(DiffFolder[ScanID1],sizeof(DiffFolder[ScanID1]),#0);
   setlength(DiffFolder[ScanID1],10000);
 
-  CompareFolders(ScanID1,ScanID2,0,0);
+  DiffFolders(ScanID1,ScanID2,0,0);
 
   for i:=1 to ScanResult[ScanID1].CurFolder do
-    if CheckParentCorrespondID(ScanID1,i)<>-1 then
-      CompareFolders(ScanID1,ScanID2,i,ScanResult[ScanID1].Folders[i].CorrespondingID);
+    if DiffCheckParentCorrespondID(ScanID1,i)<>-1 then
+      DiffFolders(ScanID1,ScanID2,i,ScanResult[ScanID1].Folders[i].CorrespondingID);
 
   DiffFileLen[ScanID1] := 0;
   FillChar(DiffFile[ScanID1],sizeof(DiffFile[ScanID1]),#0); //reset
   setlength(DiffFile[ScanID1],10000);
 
-  CompareFiles(ScanID1,ScanID2,0,0);
+  DiffFiles(ScanID1,ScanID2,0,0);
 
   for i:=1 to ScanResult[ScanID1].CurFolder do
-    if CheckParentCorrespondID(ScanID1,i)<>-1 then
-      CompareFiles(ScanID1,ScanID2,i,ScanResult[ScanID1].Folders[i].CorrespondingID);
+    if DiffCheckParentCorrespondID(ScanID1,i)<>-1 then
+      DiffFiles(ScanID1,ScanID2,i,ScanResult[ScanID1].Folders[i].CorrespondingID);
 end;
 
 
