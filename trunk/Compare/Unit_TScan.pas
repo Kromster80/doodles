@@ -7,42 +7,45 @@ type
 
 type
   TDiffInfo = record
-                ScanID:integer;
-                ItemID:integer;
-                DiffType:dtDiffType;
-              end;
+    ScanID: Integer;
+    ItemID: Integer;
+    DiffType: dtDiffType;
+  end;
+
+  TCompareFolder = record
+    Name: string;
+    Time: Integer;
+    Size: Int64; //4GB+
+    ParentID: Integer;
+    SubFolderA, SubFolderZ: Integer;
+    SubFileA, SubFileZ: Integer;
+    CorrespondingID: Integer;
+  end;
+  TCompareFile = record
+    Name: string;
+    Time: Integer;
+    Size: Int64; //4GB+
+    ParentID: Integer;
+    CorrespondingID: Integer;
+  end;
 
 type
   TScan = class
   private
     fStopCompare: Boolean;
     fFilters: TStringList;
-    fScanPath:array[1..2] of string;
-    ScanResult:array[1..2] of record
-      CurFolder,CurFile:integer;
-      Folders:array of record
-        Name:string;
-        Time:integer;
-        Size:int64; //4GB+
-        ParentID:integer;
-        SubFolderA,SubFolderZ:integer;
-        SubFileA,SubFileZ:integer;
-        CorrespondingID:integer;
-      end;
-      Files:array of record
-        Name:string;
-        Time:integer;
-        Size:int64; //4GB+
-        ParentID:integer;
-        CorrespondingID:integer;
-      end;
+    fScanPath: array[1..2] of string;
+    ScanResult: array[1..2] of record
+      CurFolder, CurFile: Integer;
+      Folders: array of TCompareFolder;
+      Files: array of TCompareFile;
     end;
-    DiffFolderLen:array[1..2] of integer;
-    DiffFolder:array[1..2] of array of TDiffInfo;
-    DiffFileLen:array[1..2] of integer;
-    DiffFile:array[1..2] of array of TDiffInfo;
+    DiffFolderLen: array [1..2] of integer;
+    DiffFolder: array [1..2] of array of TDiffInfo;
+    DiffFileLen: array [1..2] of integer;
+    DiffFile: array [1..2] of array of TDiffInfo;
 
-    ExludedCount:array[1..2]of integer;
+    ExludedCount: array [1..2] of integer;
 
     function IsExludeFileName(ScanID:integer; FileName:string):boolean;
     function GetFullPath(ScanID,FolderID:integer):string;
@@ -101,7 +104,8 @@ end;
 
 {Check wherever filename should be excluded }
 function TScan.IsExludeFileName(ScanID: Integer; FileName: string): Boolean;
-var I: Integer;
+var
+  I: Integer;
 begin
   Result := False;
   FileName := UpperCase(FileName);

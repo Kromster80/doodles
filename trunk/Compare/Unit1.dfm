@@ -2,7 +2,7 @@ object Form1: TForm1
   Left = 87
   Top = 128
   Caption = 'Folder Mirror'
-  ClientHeight = 617
+  ClientHeight = 681
   ClientWidth = 1001
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,17 +17,19 @@ object Form1: TForm1
   OnResize = FormResize
   DesignSize = (
     1001
-    617)
+    681)
   PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
     Left = 0
     Top = 0
     Width = 1001
-    Height = 217
+    Height = 241
     BevelOuter = bvNone
-    Caption = 'Panel1'
     TabOrder = 0
+    DesignSize = (
+      1001
+      241)
     object Label3: TLabel
       Left = 576
       Top = 88
@@ -35,9 +37,23 @@ object Form1: TForm1
       Height = 13
       Caption = 'Info log:'
     end
+    object Label4: TLabel
+      Left = 216
+      Top = 8
+      Width = 32
+      Height = 13
+      Caption = 'Tasks:'
+    end
+    object Label5: TLabel
+      Left = 344
+      Top = 8
+      Width = 30
+      Height = 13
+      Caption = 'Paths:'
+    end
     object B_LaunchCompare: TButton
       Left = 520
-      Top = 8
+      Top = 128
       Width = 129
       Height = 25
       Caption = 'Compare'
@@ -48,8 +64,10 @@ object Form1: TForm1
       Left = 792
       Top = 32
       Width = 201
-      Height = 177
+      Height = 201
+      Anchors = [akLeft, akTop, akBottom]
       TabOrder = 1
+      ExplicitHeight = 177
     end
     object DriveComboBox2: TDriveComboBox
       Left = 872
@@ -66,15 +84,17 @@ object Form1: TForm1
       TabOrder = 2
     end
     object Memo1: TMemo
-      Left = 400
+      Left = 216
       Top = 160
-      Width = 385
-      Height = 49
+      Width = 569
+      Height = 73
+      Anchors = [akLeft, akTop, akBottom]
       TabOrder = 3
+      ExplicitHeight = 49
     end
     object B_StopCompare: TButton
       Left = 656
-      Top = 8
+      Top = 128
       Width = 129
       Height = 25
       Caption = 'Stop'
@@ -86,8 +106,10 @@ object Form1: TForm1
       Left = 8
       Top = 32
       Width = 201
-      Height = 177
+      Height = 201
+      Anchors = [akLeft, akTop, akBottom]
       TabOrder = 5
+      ExplicitHeight = 177
     end
     object DriveComboBox1: TDriveComboBox
       Left = 8
@@ -103,96 +125,104 @@ object Form1: TForm1
       ParentFont = False
       TabOrder = 6
     end
-    object RGSyncMode: TRadioGroup
-      Left = 216
-      Top = 160
-      Width = 177
-      Height = 53
-      Caption = ' Choose sync mode  '
-      Enabled = False
-      ItemIndex = 0
-      Items.Strings = (
-        'Just make a mirror'
-        'Incremental compressed mirror')
-      TabOrder = 7
-    end
     object btnTaskAdd: TButton
       Left = 216
-      Top = 8
+      Top = 128
       Width = 49
       Height = 25
       Caption = 'Add'
-      TabOrder = 8
+      TabOrder = 7
       OnClick = btnTaskAddClick
     end
     object btnTaskRem: TButton
       Left = 272
-      Top = 8
+      Top = 128
       Width = 65
       Height = 25
       Caption = 'Remove'
-      TabOrder = 9
+      TabOrder = 8
       OnClick = btnTaskRemClick
     end
     object lstPaths: TListView
       Left = 344
-      Top = 40
+      Top = 24
       Width = 441
-      Height = 113
+      Height = 97
       Checkboxes = True
       Columns = <
         item
           Caption = 'From'
-          Width = 180
+          Width = 200
         end
         item
           Caption = 'To'
-          Width = 180
+          Width = 200
         end>
       ColumnClick = False
       GridLines = True
       HideSelection = False
       ReadOnly = True
       RowSelect = True
-      TabOrder = 10
+      TabOrder = 9
       ViewStyle = vsReport
       OnClick = ListBox1Click
       OnItemChecked = lstPathsItemChecked
     end
     object lstTasks: TListBox
       Left = 216
-      Top = 40
+      Top = 24
       Width = 121
-      Height = 113
+      Height = 97
       ItemHeight = 13
-      TabOrder = 11
+      TabOrder = 10
       OnClick = lstTasksClick
+    end
+    object btnPathAdd: TButton
+      Left = 344
+      Top = 128
+      Width = 49
+      Height = 25
+      Caption = 'Add'
+      TabOrder = 11
+      OnClick = btnPathAddClick
+    end
+    object btnPathRem: TButton
+      Left = 400
+      Top = 128
+      Width = 65
+      Height = 25
+      Caption = 'Remove'
+      TabOrder = 12
+      OnClick = btnPathRemClick
     end
   end
   object Panel2: TPanel
     Left = 0
-    Top = 216
+    Top = 240
     Width = 497
-    Height = 401
+    Height = 441
     Anchors = [akLeft, akTop, akBottom]
     BevelOuter = bvNone
-    Caption = 'Panel2'
+    Color = clMoneyGreen
+    ParentBackground = False
     TabOrder = 1
     DesignSize = (
       497
-      401)
+      441)
     object Label1: TLabel
       Left = 8
-      Top = 384
+      Top = 424
       Width = 151
       Height = 13
+      Anchors = [akLeft, akBottom]
       Caption = 'C:\...\Desktop\Delphi\Compare'
+      ExplicitTop = 384
     end
     object ListView1: TListView
       Left = 8
       Top = 40
       Width = 481
-      Height = 341
+      Height = 381
       Anchors = [akLeft, akTop, akRight, akBottom]
       Columns = <
         item
@@ -218,6 +248,7 @@ object Form1: TForm1
       OnCustomDrawItem = ListViewCustomDrawItem
       OnDblClick = ListViewDblClick
       OnSelectItem = ListView1SelectItem
+      ExplicitHeight = 341
     end
     object B_CopyOver1: TButton
       Left = 8
@@ -260,28 +291,31 @@ object Form1: TForm1
   end
   object Panel3: TPanel
     Left = 496
-    Top = 216
+    Top = 240
     Width = 505
-    Height = 401
+    Height = 441
     Anchors = [akLeft, akTop, akBottom]
     BevelOuter = bvNone
-    Caption = 'Panel3'
+    Color = clSkyBlue
+    ParentBackground = False
     TabOrder = 2
     DesignSize = (
       505
-      401)
+      441)
     object Label2: TLabel
       Left = 9
-      Top = 384
+      Top = 424
       Width = 152
       Height = 13
+      Anchors = [akLeft, akBottom]
       Caption = 'D:\...\Desktop\Delphi\Compare'
+      ExplicitTop = 384
     end
     object ListView2: TListView
       Left = 8
       Top = 40
       Width = 489
-      Height = 341
+      Height = 381
       Anchors = [akLeft, akTop, akRight, akBottom]
       Columns = <
         item
@@ -306,6 +340,7 @@ object Form1: TForm1
       ViewStyle = vsReport
       OnCustomDrawItem = ListViewCustomDrawItem
       OnDblClick = ListViewDblClick
+      ExplicitHeight = 341
     end
     object B_Delete2: TButton
       Left = 264
@@ -346,28 +381,10 @@ object Form1: TForm1
       OnClick = B_OpenClick
     end
   end
-  object btnPathAdd: TButton
-    Left = 344
-    Top = 8
-    Width = 49
-    Height = 25
-    Caption = 'Add'
-    TabOrder = 3
-    OnClick = btnPathAddClick
-  end
-  object btnPathRem: TButton
-    Left = 400
-    Top = 8
-    Width = 65
-    Height = 25
-    Caption = 'Remove'
-    TabOrder = 4
-    OnClick = btnPathRemClick
-  end
   object ImageList1: TImageList
     DrawingStyle = dsTransparent
     Left = 24
-    Top = 294
+    Top = 326
     Bitmap = {
       494C010101000500040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010

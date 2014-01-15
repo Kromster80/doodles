@@ -19,7 +19,6 @@ type
     B_StopCompare: TButton;
     DirectoryListBox1: TDirectoryListBox;
     DriveComboBox1: TDriveComboBox;
-    RGSyncMode: TRadioGroup;
     btnTaskAdd: TButton;
     btnTaskRem: TButton;
     Panel2: TPanel;
@@ -40,6 +39,8 @@ type
     lstTasks: TListBox;
     btnPathAdd: TButton;
     btnPathRem: TButton;
+    Label4: TLabel;
+    Label5: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure AcceptFiles(var msg: TMessage); message WM_DROPFILES;
     procedure LaunchCompareClick(Sender: TObject);
@@ -216,23 +217,24 @@ begin
   Memo1.Clear;
 
   GreyButtons(True);
+  try
+    FreeAndNil(fScan);
 
-  FreeAndNil(fScan);
+    fScan := TScan.Create(fTasks[0].ExludeFilter);
 
-  fScan := TScan.Create(fTasks[0].ExludeFilter);
+    if not fScan.ScanPaths(DirectoryListBox1.Directory, DirectoryListBox2.Directory, Label1, Label2, Application) then
+      Exit;
 
-  if not fScan.ScanPaths(DirectoryListBox1.Directory, DirectoryListBox2.Directory, Label1, Label2, Application) then
-    Exit;
+    fScan.FindDifference(1,2);
+    fScan.FindDifference(2,1);
 
-  fScan.FindDifference(1,2);
-  fScan.FindDifference(2,1);
+    FillLists(1,ListView1);
+    FillLists(2,ListView2);
+  finally
+    GreyButtons(false);
+  end;
 
-  FillLists(1,ListView1);
-  FillLists(2,ListView2);
-
-  GreyButtons(false);
-
-  Memo1.Lines.Add('Temporary files excluded '+IntToStr(fScan.GetExludedCount(1))+' and '+IntToStr(fScan.GetExludedCount(2)));
+  Memo1.Lines.Add('Temporary files excluded ' + IntToStr(fScan.GetExludedCount(1)) + ' and ' + IntToStr(fScan.GetExludedCount(2)));
 end;
 
 
