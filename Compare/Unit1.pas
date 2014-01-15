@@ -228,8 +228,8 @@ begin
     fScan.FindDifference(1,2);
     fScan.FindDifference(2,1);
 
-    FillLists(1,ListView1);
-    FillLists(2,ListView2);
+    FillLists(1, ListView1);
+    FillLists(2, ListView2);
   finally
     GreyButtons(false);
   end;
@@ -266,20 +266,20 @@ end;
 procedure TForm1.FillLists(ScanID:integer; LV:TListView);
 begin
   LV.Clear;
-  LV.Column[0].Width:=285;
-  LV.Column[0].MinWidth:=285;
-  LV.Column[0].MaxWidth:=285;
-  LV.Column[1].Width:=115;
-  LV.Column[1].MinWidth:=115;
-  LV.Column[1].MaxWidth:=115;
-  LV.Column[2].Width:=50;
-  LV.Column[2].MinWidth:=50;
-  LV.Column[2].MaxWidth:=50;
-  LV.Column[3].Width:=20;
-  LV.Column[3].MinWidth:=20;
-  LV.Column[3].MaxWidth:=20;
+  LV.Column[0].Width := 285;
+  LV.Column[0].MinWidth := 285;
+  LV.Column[0].MaxWidth := 285;
+  LV.Column[1].Width := 115;
+  LV.Column[1].MinWidth := 115;
+  LV.Column[1].MaxWidth := 115;
+  LV.Column[2].Width := 50;
+  LV.Column[2].MinWidth := 50;
+  LV.Column[2].MaxWidth := 50;
+  LV.Column[3].Width := 20;
+  LV.Column[3].MinWidth := 20;
+  LV.Column[3].MaxWidth := 20;
 
-  fScan.FillList(ScanID,LV);
+  fScan.FillList(ScanID, LV);
 end;
 
 procedure TForm1.ListViewDblClick(Sender: TObject);
