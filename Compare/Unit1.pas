@@ -4,7 +4,7 @@ interface
 uses
   Windows, Messages, ShellAPI, SysUtils, Classes, Graphics, Controls, Forms, StrUtils,
   StdCtrls, ComCtrls, FileCtrl, ExtCtrls, Dialogs, XMLDoc, XMLIntf,
-  Unit_TScan, ImgList, KromUtils, KromIOUtils, Unit_Tasks,
+  Unit_TScan, Unit_TDiff, ImgList, KromUtils, KromIOUtils, Unit_Tasks,
   Menus, Math;
 
 type
@@ -46,7 +46,7 @@ type
     procedure LaunchCompareClick(Sender: TObject);
     procedure ListViewCustomDrawItem(Sender: TCustomListView; Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure StopCompareClick(Sender: TObject);
-    procedure FillLists(ScanID:integer; LV:TListView);
+    procedure FillLists(aDiff: TDiff; LV:TListView);
     procedure ListViewDblClick(Sender: TObject);
     procedure B_CopyOverClick(Sender: TObject);
     procedure B_DeleteClick(Sender: TObject);
@@ -63,6 +63,10 @@ type
     procedure lstPathsItemChecked(Sender: TObject; Item: TListItem);
   private
     fTasks: TTasks;
+    fScan1: TScan;
+    fScan2: TScan;
+    fDiff1: TDiff;
+    fDiff2: TDiff;
   public
     procedure GreyButtons(Grey: Boolean);
     procedure RefreshTasks(aIndex: Integer);
@@ -218,23 +222,26 @@ begin
 
   GreyButtons(True);
   try
-    FreeAndNil(fScan);
+    FreeAndNil(fScan1);
+    FreeAndNil(fScan2);
 
-    fScan := TScan.Create(fTasks[0].ExludeFilter);
+    fScan1 := TScan.Create(fTasks[0].ExludeFilter);
+    fScan2 := TScan.Create(fTasks[0].ExludeFilter);
 
-    if not fScan.ScanPaths(DirectoryListBox1.Directory, DirectoryListBox2.Directory, Label1, Label2, Application) then
+    if not fScan1.ScanPaths(DirectoryListBox1.Directory, Label1, Application)
+    or not fScan2.ScanPaths(DirectoryListBox1.Directory, Label1, Application) then
       Exit;
 
-    fScan.FindDifference(1,2);
-    fScan.FindDifference(2,1);
+    fDiff1.FindDifference(fScan1, fScan2);
+    fDiff2.FindDifference(fScan2, fScan1);
 
-    FillLists(1, ListView1);
-    FillLists(2, ListView2);
+    FillLists(fDiff1, ListView1);
+    FillLists(fDiff2, ListView2);
   finally
     GreyButtons(false);
   end;
 
-  Memo1.Lines.Add('Temporary files excluded ' + IntToStr(fScan.GetExludedCount(1)) + ' and ' + IntToStr(fScan.GetExludedCount(2)));
+  Memo1.Lines.Add('Temporary files excluded ' + IntToStr(fScan1.ExludedCount) + ' and ' + IntToStr(fScan2.ExludedCount));
 end;
 
 
@@ -260,10 +267,12 @@ end;
 
 procedure TForm1.StopCompareClick(Sender: TObject);
 begin
-  fScan.StopCompare;
+  fScan1.StopCompare;
+  fScan2.StopCompare;
 end;
 
-procedure TForm1.FillLists(ScanID:integer; LV:TListView);
+
+procedure TForm1.FillLists(aDiff: TDiff; LV:TListView);
 begin
   LV.Clear;
   LV.Column[0].Width := 285;
@@ -279,7 +288,7 @@ begin
   LV.Column[3].MinWidth := 20;
   LV.Column[3].MaxWidth := 20;
 
-  fScan.FillList(ScanID, LV);
+  aDiff.FillList(LV);
 end;
 
 procedure TForm1.ListViewDblClick(Sender: TObject);
@@ -288,9 +297,9 @@ begin
   if (Sender as TListView).ItemIndex=-1 then exit;
   s:=(Sender as TListView).Items.Item[(Sender as TListView).ItemIndex].Caption;
   if Sender=ListView1 then
-    ShellExecute(handle, 'open', @(fScan.GetPath(1)+'\'+s)[1], NiL, Nil, SW_SHOWNORMAL);
+    ShellExecute(handle, 'open', @(fScan1.Path+'\'+s)[1], NiL, Nil, SW_SHOWNORMAL);
   if Sender=ListView2 then
-    ShellExecute(handle, 'open', @(fScan.GetPath(2)+'\'+s)[1], NiL, Nil, SW_SHOWNORMAL);
+    ShellExecute(handle, 'open', @(fScan2.Path+'\'+s)[1], NiL, Nil, SW_SHOWNORMAL);
 end;
 
 procedure TForm1.B_CopyOverClick(Sender: TObject);
@@ -315,14 +324,14 @@ begin
   if Sender=B_CopyOver1 then begin
     LV_A:=ListView1;
     LV_B:=ListView2;
-    Path_A:=fScan.GetPath(1);
-    Path_B:=fScan.GetPath(2);
+    Path_A:=fScan1.Path;
+    Path_B:=fScan2.Path;
   end else
   if Sender=B_CopyOver2 then begin
     LV_A:=ListView2;
     LV_B:=ListView1;
-    Path_A:=fScan.GetPath(2);
-    Path_B:=fScan.GetPath(1);
+    Path_A:=fScan2.Path;
+    Path_B:=fScan1.Path;
   end else
     Assert(false,'Bad sender');
 
@@ -381,14 +390,14 @@ begin
   if Sender=B_Delete1 then begin
     LV_A:=ListView1;
     LV_B:=ListView2;
-    Path_A:=fScan.GetPath(1);
-    Path_B:=fScan.GetPath(2);
+    Path_A:=fScan1.Path;
+    Path_B:=fScan2.Path;
   end else
   if Sender=B_Delete2 then begin
     LV_A:=ListView2;
     LV_B:=ListView1;
-    Path_A:=fScan.GetPath(2);
-    Path_B:=fScan.GetPath(1);
+    Path_A:=fScan2.Path;
+    Path_B:=fScan1.Path;
   end else
   Assert(false,'Wrong Delete sender');
 
