@@ -67,7 +67,6 @@ object Form1: TForm1
       Height = 201
       Anchors = [akLeft, akTop, akBottom]
       TabOrder = 1
-      ExplicitHeight = 177
     end
     object DriveComboBox2: TDriveComboBox
       Left = 872
@@ -90,7 +89,6 @@ object Form1: TForm1
       Height = 73
       Anchors = [akLeft, akTop, akBottom]
       TabOrder = 3
-      ExplicitHeight = 49
     end
     object B_StopCompare: TButton
       Left = 656
@@ -109,7 +107,6 @@ object Form1: TForm1
       Height = 201
       Anchors = [akLeft, akTop, akBottom]
       TabOrder = 5
-      ExplicitHeight = 177
     end
     object DriveComboBox1: TDriveComboBox
       Left = 8
@@ -248,7 +245,6 @@ object Form1: TForm1
       OnCustomDrawItem = ListViewCustomDrawItem
       OnDblClick = ListViewDblClick
       OnSelectItem = ListView1SelectItem
-      ExplicitHeight = 341
     end
     object B_CopyOver1: TButton
       Left = 8
@@ -340,7 +336,6 @@ object Form1: TForm1
       ViewStyle = vsReport
       OnCustomDrawItem = ListViewCustomDrawItem
       OnDblClick = ListViewDblClick
-      ExplicitHeight = 341
     end
     object B_Delete2: TButton
       Left = 264
