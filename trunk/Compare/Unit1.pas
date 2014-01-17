@@ -226,8 +226,8 @@ begin
     FreeAndNil(fDiff1);
     FreeAndNil(fDiff2);
 
-    fScan1 := TScan.Create(fTasks[0].ExludeFilterFiles, fTasks[0].ExludeFilterFolders);
-    fScan2 := TScan.Create(fTasks[0].ExludeFilterFiles, fTasks[0].ExludeFilterFolders);
+    fScan1 := TScan.Create(fTasks[0].FilterFiles, fTasks[0].FilterFolders);
+    fScan2 := TScan.Create(fTasks[0].FilterFiles, fTasks[0].FilterFolders);
     fDiff1 := TDiff.Create;
     fDiff2 := TDiff.Create;
 
