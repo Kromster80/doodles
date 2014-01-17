@@ -11,7 +11,8 @@ type
 
   TTask = class
     fPaths: TList<TPair>;
-    fExludeFilter: string;
+    fExludeFilterFiles: string;
+    fExludeFilterFolders: string;
   private
     function GetCount: Integer;
     function GetPath(aIndex: Integer): TPair;
@@ -25,7 +26,8 @@ type
     procedure AddPaths(A,B: string);
     property Count: Integer read GetCount;
     procedure Delete(aIndex: Integer);
-    property ExludeFilter: string read fExludeFilter;
+    property ExludeFilterFiles: string read fExludeFilterFiles;
+    property ExludeFilterFolders: string read fExludeFilterFolders;
     property Paths[aIndex: Integer]: TPair read GetPath write SetPath;
     procedure LoadFromXML(aNode: IXMLNode);
     procedure SaveToXML(aNode: IXMLNode);
@@ -116,7 +118,8 @@ begin
   end;
 
   NFilters := aNode.ChildNodes['Filters'];
-  fExludeFilter := NFilters.Attributes['Exclude'];
+  fExludeFilterFiles := NFilters.Attributes['ExcludeFiles'];
+  fExludeFilterFolders := NFilters.Attributes['ExcludeFolders'];
 end;
 
 
@@ -137,7 +140,8 @@ begin
   end;
 
   NFilters := aNode.AddChild('Filters');
-  NFilters.Attributes['Exclude'] := fExludeFilter;
+  NFilters.Attributes['ExcludeFiles'] := fExludeFilterFiles;
+  NFilters.Attributes['ExcludeFolders'] := fExludeFilterFolders;
 end;
 
 

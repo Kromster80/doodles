@@ -17,25 +17,24 @@ type
   private
     fScan1, fScan2: TScan;
 
-    DiffFolderLen: Integer;
-    DiffFolder: array of TDiffInfo;
-    DiffFileLen: Integer;
-    DiffFile: array of TDiffInfo;
+    fCountFolders: Integer;
+    fCountFiles: Integer;
 
     function DiffCheckParentCorrespondID(FolderID:integer):integer;
     procedure DiffFolders(FolderID1, FolderID2: Integer);
     procedure DiffFiles(FolderID1,FolderID2:integer);
   public
+    Folders: array of TDiffInfo;
+    Files: array of TDiffInfo;
     constructor Create;
     destructor Destroy; override;
 
+    property CountFolders: Integer read fCountFolders;
+    property CountFiles: Integer read fCountFiles;
+    property Scan: TScan read fScan1;
+
     procedure FindDifference(aScan1, aScan2: TScan);
-    procedure FillList(LV:TListView);
   end;
-
-
-var
-  fScan: TDiff;
 
 
 implementation
@@ -87,9 +86,9 @@ begin
 
     if fScan1.Folders[i].Size>0 then
     if fScan1.Folders[i].CorrespondingID=-1 then begin
-      inc(DiffFolderLen);
-      DiffFolder[DiffFolderLen].ItemID:=i;
-      DiffFolder[DiffFolderLen].DiffType := dtNewer;
+      inc(fCountFolders);
+      Folders[fCountFolders].ItemID:=i;
+      Folders[fCountFolders].DiffType := dtNewer;
     end;
 
   end;
@@ -126,8 +125,9 @@ begin
       end;
 
     if fScan1.Files[i].CorrespondingID=-1 then begin
-      DiffFile[DiffFileLen].ItemID:=i;
-      DiffFile[DiffFileLen].DiffType:=dt;
+      inc(fCountFiles);
+      Files[fCountFiles].ItemID:=i;
+      Files[fCountFiles].DiffType:=dt;
     end;
 
   end;
@@ -135,56 +135,31 @@ end;
 
 
 procedure TDiff.FindDifference(aScan1, aScan2: TScan);
-var i:integer;
+var
+  i: integer;
 begin
-  DiffFolderLen:=0;
-  FillChar(DiffFolder,sizeof(DiffFolder),#0);
-  setlength(DiffFolder,10000);
+  fScan1 := aScan1;
+  fScan2 := aScan2;
 
-  DiffFolders(0,0);
+  fCountFolders := 0;
+  FillChar(Folders, sizeof(Folders),#0);
+  setlength(Folders, 10000);
 
-  for i:=1 to fScan1.CurFolder do
-    if DiffCheckParentCorrespondID(i)<>-1 then
-      DiffFolders(i,fScan1.Folders[i].CorrespondingID);
+  DiffFolders(0, 0);
 
-  DiffFileLen := 0;
-  FillChar(DiffFile,sizeof(DiffFile),#0); //reset
-  setlength(DiffFile,10000);
+  for i := 1 to fScan1.CurFolder do
+    if DiffCheckParentCorrespondID(i) <> -1 then
+      DiffFolders(i, fScan1.Folders[i].CorrespondingID);
 
-  DiffFiles(0,0);
+  fCountFiles := 0;
+  FillChar(Files, sizeof(Files),#0); //reset
+  setlength(Files, 10000);
 
-  for i:=1 to fScan1.CurFolder do
-    if DiffCheckParentCorrespondID(i)<>-1 then
-      DiffFiles(i,fScan1.Folders[i].CorrespondingID);
-end;
+  DiffFiles(0, 0);
 
-
-procedure TDiff.FillList(LV:TListView);
-var i:integer;
-begin
-  for i:=1 to DiffFolderLen do
-  with LV.Items.Add do begin
-    Caption := fScan1.GetRelativePath(DiffFolder[i].ItemID);
-    SubItems.Add(fScan1.GetFolderDateTime(DiffFolder[i].ItemID));
-    SubItems.Add(fScan1.GetFolderSize(DiffFolder[i].ItemID));
-    SubItems.Add('A');
-    ImageIndex := 0;
-  end;
-
-  for i:=1 to DiffFileLen do
-  with LV.Items.Add do begin
-    Caption := fScan1.GetRelativeFileName(DiffFile[i].ItemID);
-    SubItems.Add(fScan1.GetFileDateTime(DiffFile[i].ItemID));
-    SubItems.Add(fScan1.GetFileSize(DiffFile[i].ItemID));
-    case DiffFile[i].DiffType of
-      dtAdded:  SubItems.Add('A');
-      dtOlder:  SubItems.Add('O');
-      dtNewer:  SubItems.Add('N');
-      dtContent:SubItems.Add('C');
-      else      SubItems.Add('?');
-    end;
-    ImageIndex := 1;
-  end;
+  for i := 1 to fScan1.CurFolder do
+    if DiffCheckParentCorrespondID(i) <> -1 then
+      DiffFiles(i, fScan1.Folders[i].CorrespondingID);
 end;
 
 
