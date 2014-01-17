@@ -244,7 +244,6 @@ object Form1: TForm1
       ViewStyle = vsReport
       OnCustomDrawItem = ListViewCustomDrawItem
       OnDblClick = ListViewDblClick
-      OnSelectItem = ListView1SelectItem
     end
     object B_CopyOver1: TButton
       Left = 8
