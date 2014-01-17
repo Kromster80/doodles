@@ -108,17 +108,17 @@ begin
     for k:=fScan2.Folders[FolderID2].SubFileA to
            fScan2.Folders[FolderID2].SubFileZ do
       if UpperCase(fScan1.Files[i].Name) = UpperCase(fScan2.Files[k].Name) then begin
-        if fScan1.Files[i].Time = fScan2.Files[k].Time then
+        if fScan1.Files[i].FileTime = fScan2.Files[k].FileTime then
         if fScan1.Files[i].Size = fScan2.Files[k].Size then
           fScan1.Files[i].CorrespondingID:=k;
 
         if fScan1.Files[i].Size <> fScan2.Files[k].Size then
           dt:=dtContent;
 
-        if fScan1.Files[i].Time > fScan2.Files[k].Time then
+        if fScan1.Files[i].FileTime > fScan2.Files[k].FileTime then
           dt:=dtNewer;
 
-        if fScan1.Files[i].Time < fScan2.Files[k].Time then
+        if fScan1.Files[i].FileTime < fScan2.Files[k].FileTime then
           dt:=dtOlder;
 
         break;

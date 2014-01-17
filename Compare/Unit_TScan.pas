@@ -5,7 +5,7 @@ uses Forms, Classes, StdCtrls, Windows, ComCtrls, SysUtils, DateUtils, KromUtils
 type
   TCompareFolder = record
     Name: string;
-    Time: Integer;
+    FileTime: Integer;
     Size: Int64; //4GB+
     ParentID: Integer;
     SubFolderA, SubFolderZ: Integer;
@@ -15,7 +15,7 @@ type
 
   TCompareFile = record
     Name: string;
-    Time: Integer;
+    FileTime: Integer;
     Size: Int64; //4GB+
     ParentID: Integer;
     CorrespondingID: Integer;
@@ -30,7 +30,6 @@ type
     fScanPath: string;
 
     fExludedCount: Integer;
-
   public
     CurFolder, CurFile: Integer;
     Folders: array of TCompareFolder;
@@ -39,18 +38,18 @@ type
     constructor Create(aFilterFiles, aFilterFolders: string);
     destructor Destroy; override;
 
-    function IsExludeFileName(aFileName: string): boolean;
-    function IsExludeFolderName(aFolderName: string): boolean;
-    function GetFullPath(FolderID:integer):string;
-    function GetRelativePath(FolderID:integer):string;
-    function GetRelativeFileName(FileID:integer):string;
-    function GetFolderDateTime(FolderID:integer):string;
-    function GetFileDateTime(FileID:integer):string;
-    function GetFolderSize(FolderID:integer):string;
-    function GetFileSize(FileID:integer):string;
-    procedure IncParentFoldersSize(FolderID:integer; Size:Int64);
-    procedure SearchFolder(Path:string; FolderID:integer);
-    function ScanPath(aPath:string; aProgress:TLabel; aApp:TApplication):boolean;
+    function SkipFile(aFileName: string): boolean;
+    function SkipFolder(aFolderName: string): boolean;
+    function GetFullPath(FolderID: Integer): string;
+    function GetRelativePath(FolderID: Integer): string;
+    function GetRelativeFileName(FileID: Integer): string;
+    function GetFolderDateTime(FolderID: Integer): string;
+    function GetFileDateTime(FileID: Integer): string;
+    function GetFolderSize(FolderID: Integer): string;
+    function GetFileSize(FileID: Integer): string;
+    procedure IncParentFoldersSize(FolderID: Integer; Size: Int64);
+    procedure SearchFolder(Path: string; FolderID: Integer);
+    function ScanPath(aPath: string; aProgress: TLabel; aApp: TApplication): Boolean;
 
     procedure Clear;
     function ScanPaths(aPath1: string; aProgress1: TLabel; aApp: TApplication): Boolean;
@@ -88,8 +87,8 @@ begin
 end;
 
 
-{Check wherever filename should be excluded }
-function TScan.IsExludeFileName(aFileName: string): Boolean;
+//Check wherever file should be skipped
+function TScan.SkipFile(aFileName: string): Boolean;
 var
   I: Integer;
 begin
@@ -106,8 +105,8 @@ begin
 end;
 
 
-{Check wherever filename should be excluded }
-function TScan.IsExludeFolderName(aFolderName: string): Boolean;
+//Check wherever folder should be skipped
+function TScan.SkipFolder(aFolderName: string): Boolean;
 var
   I: Integer;
 begin
@@ -124,8 +123,8 @@ begin
 end;
 
 
-{Return full Path for given FolderID/ScanID}
-function TScan.GetFullPath(FolderID: Integer):string;
+//Return full Path for given FolderID
+function TScan.GetFullPath(FolderID: Integer): string;
 var
   SearchPath: string;
 begin
@@ -139,8 +138,8 @@ begin
 end;
 
 
-{Return Path for given FolderID/ScanID except topmost parent folder}
-function TScan.GetRelativePath(FolderID: integer): string;
+//Return Path for given FolderID except topmost parent folder
+function TScan.GetRelativePath(FolderID: Integer): string;
 var
   SearchPath: string;
 begin
@@ -154,95 +153,110 @@ begin
 end;
 
 
-{Relative filename including path}
-function TScan.GetRelativeFileName(FileID:integer):string;
+//Relative filename including path
+function TScan.GetRelativeFileName(FileID: Integer): string;
 begin
   Result := GetRelativePath(Files[FileID].ParentID) + Files[FileID].Name;
 end;
 
 
-function TScan.GetFolderDateTime(FolderID:integer):string;
+function TScan.GetFolderDateTime(FolderID: Integer): string;
 begin
-  DateTimeToString(Result, 'c', FileDateToDateTime(Folders[FolderID].Time));
+  DateTimeToString(Result, 'c', FileDateToDateTime(Folders[FolderID].FileTime));
 end;
 
 
-function TScan.GetFileDateTime(FileID:integer):string;
+function TScan.GetFileDateTime(FileID: Integer): string;
 begin
-  DateTimeToString(Result, 'c', FileDateToDateTime(Files[FileID].Time));
+  DateTimeToString(Result, 'c', FileDateToDateTime(Files[FileID].FileTime));
 end;
 
 
-function TScan.GetFolderSize(FolderID:integer):string;
+function TScan.GetFolderSize(FolderID: Integer): string;
 begin
   Result := ReturnSize(Folders[FolderID].Size);
 end;
 
 
-function TScan.GetFileSize(FileID:integer):string;
+function TScan.GetFileSize(FileID: Integer): string;
 begin
   Result := ReturnSize(Files[FileID].Size);
 end;
 
 
-procedure TScan.IncParentFoldersSize(FolderID:integer; Size:Int64);
+procedure TScan.IncParentFoldersSize(FolderID: Integer; Size: Int64);
 begin
   while (FolderID <> 0) do
   begin
-    inc(Folders[FolderID].Size, Size);
+    Inc(Folders[FolderID].Size, Size);
     FolderID := Folders[FolderID].ParentID;
   end;
 end;
 
 
-procedure TScan.SearchFolder(Path:string; FolderID:integer);
-var SearchRec:TSearchRec; i,k:integer; DT:_FILETIME; ST,STL:_SYSTEMTIME; D:TDateTime;
+procedure TScan.SearchFolder(Path: string; FolderID: Integer);
+var
+  SearchRec: TSearchRec;
+  I, K: Integer;
+  DT:_FILETIME;
+  ST, STL:_SYSTEMTIME;
+  D: TDateTime;
 begin
-  FindFirst(Path+'\*', faAnyFile or faDirectory, SearchRec);
-  i:=CurFolder; k:=CurFile;
-  Folders[FolderID].SubFolderA:=i+1;
-  Folders[FolderID].SubFileA:=k+1;
+  FindFirst(Path + '\*', faAnyFile, SearchRec);
+  I := CurFolder;
+  K := CurFile;
+  Folders[FolderID].SubFolderA := I+1;
+  Folders[FolderID].SubFileA := K+1;
   repeat
-    if (SearchRec.Name<>'.')and(SearchRec.Name<>'..') then
-      if (SearchRec.Attr and faDirectory = faDirectory) then begin
-        if not IsExludeFolderName(SearchRec.Name) then
-        begin
-          inc(i);
-          if i+1>=length(Folders) then
-            setlength(Folders,i+100);
-          Folders[i].Name:=SearchRec.Name;
-          Folders[i].Time:=SearchRec.Time;
-          Folders[i].ParentID:=FolderID;
-        end;
-      end
-      else
-      if not IsExludeFileName(SearchRec.Name) then begin
-        inc(k);
-        if k+1>=length(Files) then
-          setlength(Files,k+100);
-        Files[k].Name:=SearchRec.Name;
-        Files[k].Time:=SearchRec.Time;
-        Files[k].Size:=
-          Int64(SearchRec.FindData.nFileSizeHigh) shl Int64(32) +
-          Int64(SearchRec.FindData.nFileSizeLow);
+    //Skip uplinks
+    if (SearchRec.Name = '.') or (SearchRec.Name = '..') then
+      Continue;
+
+    if (SearchRec.Attr and faDirectory = faDirectory) then
+    begin
+      //Process folder
+      if not SkipFolder(SearchRec.Name) then
+      begin
+        Inc(I);
+        if I+1 >= Length(Folders) then
+          SetLength(Folders, I+100);
+        Folders[I].Name := SearchRec.Name;
+        Folders[I].FileTime := SearchRec.Time;
+        Folders[I].ParentID := FolderID;
+      end;
+    end
+    else
+    begin
+      //Process file
+      if not SkipFile(SearchRec.Name) then
+      begin
+        Inc(K);
+        if K+1 >= Length(Files) then
+          SetLength(Files, K+100);
+        Files[K].Name := SearchRec.Name;
+        Files[K].FileTime := SearchRec.Time;
+        Files[K].Size := Int64(SearchRec.FindData.nFileSizeHigh) shl Int64(32) +
+                         Int64(SearchRec.FindData.nFileSizeLow);
 
           {
         FileTimeToLocalFileTime(SearchRec.FindData.ftLastWriteTime,DT);
         FileTimeToSystemTime(DT,ST);
         SystemTimeToTzSpecificLocalTime(nil, ST, STL);
         D := EncodeDateTime(STL.wYear, STL.wMonth, STL.wDay, STL.wHour, STL.wMinute, STL.wSecond, STL.wMilliseconds);
-        Files[k].Time:=DateTimeToFileDate(D);
+        Files[K].Time:=DateTimeToFileDate(D);
           }
 
-        Files[k].ParentID:=FolderID;
-        IncParentFoldersSize(FolderID,Files[k].Size);
+        Files[K].ParentID := FolderID;
+        IncParentFoldersSize(FolderID, Files[K].Size);
       end;
-  until (FindNext(SearchRec)<>0);
+    end;
+  until (FindNext(SearchRec) <> 0);
   FindClose(SearchRec);
-  Folders[FolderID].SubFolderZ:=i;
-  Folders[FolderID].SubFileZ:=k;
-  CurFolder:=i;
-  CurFile:=k;
+
+  Folders[FolderID].SubFolderZ := I;
+  Folders[FolderID].SubFileZ := K;
+  CurFolder := I;
+  CurFile := K;
 end;
 
 
