@@ -53,7 +53,6 @@ type
     procedure btnTaskAddClick(Sender: TObject);
     procedure btnTaskRemClick(Sender: TObject);
     procedure B_OpenClick(Sender: TObject);
-    procedure ListView1SelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
     procedure FormResize(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnPathAddClick(Sender: TObject);
@@ -66,7 +65,7 @@ type
     fScan2: TScan;
     fDiff1: TDiff;
     fDiff2: TDiff;
-    procedure FillList(aDiff: TDiff; LV:TListView);
+    procedure FillList(aDiff: TDiff; aListView: TListView);
   public
     procedure GreyButtons(Grey: Boolean);
     procedure RefreshTasks(aIndex: Integer);
@@ -249,48 +248,55 @@ begin
 end;
 
 
-procedure TForm1.FillList(aDiff: TDiff; LV:TListView);
+procedure TForm1.FillList(aDiff: TDiff; aListView: TListView);
 var
-  i: integer;
+  I: Integer;
+  new: TListItem;
 begin
-  LV.Clear;
-  LV.Column[0].Width := 285;
-  LV.Column[0].MinWidth := 285;
-  LV.Column[0].MaxWidth := 285;
-  LV.Column[1].Width := 115;
-  LV.Column[1].MinWidth := 115;
-  LV.Column[1].MaxWidth := 115;
-  LV.Column[2].Width := 50;
-  LV.Column[2].MinWidth := 50;
-  LV.Column[2].MaxWidth := 50;
-  LV.Column[3].Width := 20;
-  LV.Column[3].MinWidth := 20;
-  LV.Column[3].MaxWidth := 20;
+  aListView.Clear;
 
-  for i:=1 to aDiff.CountFolders do
-  with LV.Items.Add do
-  begin
-    Caption := aDiff.Scan.GetRelativePath(aDiff.Folders[i].ItemID);
-    SubItems.Add(aDiff.Scan.GetFolderDateTime(aDiff.Folders[i].ItemID));
-    SubItems.Add(aDiff.Scan.GetFolderSize(aDiff.Folders[i].ItemID));
-    SubItems.Add('A');
-    ImageIndex := 0;
-  end;
+  aListView.Items.BeginUpdate;
+  try
+    aListView.Column[0].Width := 285;
+    aListView.Column[0].MinWidth := 285;
+    aListView.Column[0].MaxWidth := 285;
+    aListView.Column[1].Width := 115;
+    aListView.Column[1].MinWidth := 115;
+    aListView.Column[1].MaxWidth := 115;
+    aListView.Column[2].Width := 50;
+    aListView.Column[2].MinWidth := 50;
+    aListView.Column[2].MaxWidth := 50;
+    aListView.Column[3].Width := 20;
+    aListView.Column[3].MinWidth := 20;
+    aListView.Column[3].MaxWidth := 20;
 
-  for i:=1 to aDiff.CountFiles do
-  with LV.Items.Add do
-  begin
-    Caption := aDiff.Scan.GetRelativeFileName(aDiff.Files[i].ItemID);
-    SubItems.Add(aDiff.Scan.GetFileDateTime(aDiff.Files[i].ItemID));
-    SubItems.Add(aDiff.Scan.GetFileSize(aDiff.Files[i].ItemID));
-    case aDiff.Files[i].DiffType of
-      dtAdded:   SubItems.Add('A');
-      dtOlder:   SubItems.Add('O');
-      dtNewer:   SubItems.Add('N');
-      dtContent: SubItems.Add('C');
-      else       SubItems.Add('?');
+    for I := 1 to aDiff.CountFolders do
+    begin
+      new := aListView.Items.Add;
+      new.Caption := aDiff.Scan.GetRelativePath(aDiff.Folders[I].ItemID);
+      new.SubItems.Add(aDiff.Scan.GetFolderDateTime(aDiff.Folders[I].ItemID));
+      new.SubItems.Add(aDiff.Scan.GetFolderSize(aDiff.Folders[I].ItemID));
+      new.SubItems.Add('A');
+      new.ImageIndex := 0;
     end;
-    ImageIndex := 1;
+
+    for I := 1 to aDiff.CountFiles do
+    begin
+      new := aListView.Items.Add;
+      new.Caption := aDiff.Scan.GetRelativeFileName(aDiff.Files[I].ItemID);
+      new.SubItems.Add(aDiff.Scan.GetFileDateTime(aDiff.Files[I].ItemID));
+      new.SubItems.Add(aDiff.Scan.GetFileSize(aDiff.Files[I].ItemID));
+      case aDiff.Files[I].DiffType of
+        dtAdded:   new.SubItems.Add('A');
+        dtOlder:   new.SubItems.Add('O');
+        dtNewer:   new.SubItems.Add('N');
+        dtContent: new.SubItems.Add('C');
+        else       new.SubItems.Add('?');
+      end;
+      new.ImageIndex := 1;
+    end;
+  finally
+    aListView.Items.EndUpdate;
   end;
 end;
 
@@ -300,16 +306,16 @@ begin
   with Sender do
   begin
     Canvas.Brush.Color := $FF00FF;
-    if Item.SubItems.Strings[2]='A' then
+    if Item.SubItems.Strings[2] = 'A' then
       Canvas.Brush.Color := $88CC88;
-    if Item.SubItems.Strings[2]='O' then
+    if Item.SubItems.Strings[2] = 'O' then
       Canvas.Brush.Color := $888888;
-    if Item.SubItems.Strings[2]='N' then
+    if Item.SubItems.Strings[2] = 'N' then
       Canvas.Brush.Color := $CCCCCC;
-    if Item.SubItems.Strings[2]='C' then
+    if Item.SubItems.Strings[2] = 'C' then
       Canvas.Brush.Color := $88CCCC;
-    Canvas.TextOut(Item.DisplayRect(drLabel).Left+2,
-      Item.DisplayRect(drLabel).Top, Item.Caption);
+    Canvas.TextOut(Item.DisplayRect(drLabel).Left + 2, Item.DisplayRect(drLabel).Top, Item.Caption);
+
     DefaultDraw := True;
   end;
 end;
@@ -321,28 +327,39 @@ begin
   fScan2.StopCompare;
 end;
 
+
 procedure TForm1.ListViewDblClick(Sender: TObject);
-var s:string;
+var
+  path: string;
 begin
-  if (Sender as TListView).ItemIndex=-1 then exit;
-  s:=(Sender as TListView).Items.Item[(Sender as TListView).ItemIndex].Caption;
-  if Sender=ListView1 then
-    ShellExecute(handle, 'open', @(fScan1.Path+'\'+s)[1], NiL, Nil, SW_SHOWNORMAL);
-  if Sender=ListView2 then
-    ShellExecute(handle, 'open', @(fScan2.Path+'\'+s)[1], NiL, Nil, SW_SHOWNORMAL);
+  if TListView(Sender).ItemIndex = -1 then
+    Exit;
+
+  path := TListView(Sender).Items.Item[TListView(Sender).ItemIndex].Caption;
+
+  if Sender = ListView1 then
+    ShellExecute(Handle, nil, @(fScan1.path + '\' + path)[1], nil, nil, SW_SHOWNORMAL);
+
+  if Sender = ListView2 then
+    ShellExecute(Handle, nil, @(fScan2.path + '\' + path)[1], nil, nil, SW_SHOWNORMAL);
 end;
+
 
 procedure TForm1.B_CopyOverClick(Sender: TObject);
 var
-  i:integer; s1,s2:string; ToDel:array of boolean; TLI:TListItem;
+  i:integer;
+  s1,s2:string;
+  ToDel:array of boolean;
+  TLI:TListItem;
   CopyList1,CopyList2:string;
-  LV_A,LV_B:TListView; Path_A,Path_B:string;//Copy from A to B
+  LV_A,LV_B:TListView;
+  Path_A,Path_B:string;//Copy from A to B
 
-    function FindAnyMatches():boolean;
+    function FindAnyMatches: Boolean;
     var i:integer;
     begin
-    Result:=false;
-    for i:=1 to LV_A.Items.Count do
+      Result:=false;
+      for i:=1 to LV_A.Items.Count do
       if (LV_A.Items.Item[i-1].Selected)or(LV_A.SelCount=0) then
         if fileexists(Path_B+'\'+LV_A.Items.Item[i-1].Caption) then begin
           Result:=true;
@@ -351,28 +368,32 @@ var
     end;
 
 begin
-  if Sender=B_CopyOver1 then begin
-    LV_A:=ListView1;
-    LV_B:=ListView2;
-    Path_A:=fScan1.Path;
-    Path_B:=fScan2.Path;
-  end else
-  if Sender=B_CopyOver2 then begin
-    LV_A:=ListView2;
-    LV_B:=ListView1;
-    Path_A:=fScan2.Path;
-    Path_B:=fScan1.Path;
-  end else
-    Assert(false,'Bad sender');
+  if Sender = B_CopyOver1 then
+  begin
+    LV_A := ListView1;
+    LV_B := ListView2;
+    Path_A := fScan1.path;
+    Path_B := fScan2.path;
+  end
+  else
+  if Sender = B_CopyOver2 then
+  begin
+    LV_A := ListView2;
+    LV_B := ListView1;
+    Path_A := fScan2.path;
+    Path_B := fScan1.path;
+  end
+  else
+    Assert(False, 'Bad sender');
 
-if FindAnyMatches then
-  if MessageBox(Form1.Handle,'Overwrite matching files?','Please confirm', MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2 ) <> IDYES then exit;
+  if FindAnyMatches then
+    if MessageBox(Form1.Handle,'Overwrite matching files?','Please confirm', MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2 ) <> IDYES then exit;
 
-GreyButtons(true);
-setlength(ToDel,LV_A.Items.Count+1);
-CopyList1:='';
-CopyList2:='';
-for i:=1 to LV_A.Items.Count do
+  GreyButtons(true);
+  setlength(ToDel,LV_A.Items.Count+1);
+  CopyList1:='';
+  CopyList2:='';
+  for i:=1 to LV_A.Items.Count do
   if (LV_A.Items.Item[i-1].Selected)or(LV_A.SelCount=0) then begin
     s1:=Path_A+'\'+LV_A.Items.Item[i-1].Caption;
     s2:=Path_B+'\'+LV_A.Items.Item[i-1].Caption;
@@ -405,8 +426,9 @@ for i:=1 to LV_A.Items.Count do
     LV_A.Items[i-1].Delete;
   end;
 
-  GreyButtons(false);
+  GreyButtons(False);
 end;
+
 
 procedure TForm1.B_DeleteClick(Sender: TObject);
 var
@@ -632,33 +654,19 @@ begin
   if (Sender=B_Open1)or(Sender=B_OpenF1) then begin LV:=ListView1; scan:=fScan1; end;
   if (Sender=B_Open2)or(Sender=B_OpenF2) then begin LV:=ListView2; scan:=fScan2; end;
 
-  if LV.SelCount>1 then
-  if MessageBox(Handle,@('Open '+inttostr(LV.SelCount)+' selected items at once?')[1] ,'Please confirm', MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2 ) <> IDYES then exit;
+  if LV.SelCount > 1 then
+  if MessageBox(Handle, @('Open '+inttostr(LV.SelCount)+' selected items at once?')[1] ,'Please confirm', MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2 ) <> IDYES then
+    Exit;
 
   for i:=1 to LV.Items.Count do
   if LV.Items[i-1].Selected then begin
     s:=scan.Path+'\'+LV.Items[i-1].Caption;
     if (Sender=B_Open1)or(Sender=B_Open2) then
-      ShellExecute(handle, 'open', @(scan.Path+'\'+LV.Items[i-1].Caption)[1], nil, nil, SW_SHOWNORMAL);
+      ShellExecute(handle, nil, @(scan.Path+'\'+LV.Items[i-1].Caption)[1], nil, nil, SW_SHOWNORMAL);
     if (Sender=B_OpenF1)or(Sender=B_OpenF2) then
-      ShellExecute(handle, 'open', @ExtractFilePath(scan.Path+'\'+LV.Items[i-1].Caption)[1], nil, nil, SW_SHOWNORMAL);
+      ShellExecute(handle, nil, @ExtractFilePath(scan.Path+'\'+LV.Items[i-1].Caption)[1], nil, nil, SW_SHOWNORMAL);
   end;
 end;
 
-
-procedure TForm1.ListView1SelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
-//var LV:TListView; i,ID:integer; acc:int64;
-begin
-  {if Sender=ListView1 then begin LV:=ListView1; ID:=1; end;
-  if Sender=ListView2 then begin LV:=ListView2; ID:=2; end;
-
-  acc := 0;
-  for i:=1 to LV.Items.Count do
-  if LV.Items[i-1].Selected then
-//    acc := fScanacc + fScan.GetPath(ID)+'\'+LV.Items[i-1].Caption;
-
-  //Label4.Caption := inttostr(acc);
-   }
-end;
 
 end.

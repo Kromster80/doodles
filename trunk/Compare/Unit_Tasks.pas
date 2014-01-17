@@ -36,9 +36,6 @@ type
 
   TTasks = class(TList<TTask>)
   public
-    constructor Create;
-    destructor Destroy; override;
-
     procedure LoadFromXML(aNode: IXMLNode);
     procedure SaveToXML(aNode: IXMLNode);
   end;
@@ -146,22 +143,6 @@ end;
 
 
 { TTasks }
-constructor TTasks.Create;
-begin
-  inherited;
-
-  //fTasks := TList<TTask>.Create;
-end;
-
-
-destructor TTasks.Destroy;
-begin
-  //fTasks.Free;
-
-  inherited;
-end;
-
-
 procedure TTasks.LoadFromXML(aNode: IXMLNode);
 var
   I: Integer;
