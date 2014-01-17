@@ -25,7 +25,8 @@ type
   TScan = class
   private
     fStopCompare: Boolean;
-    fFilters: TStringList;
+    fFilterFiles: TStringList;
+    fFilterFolders: TStringList;
     fScanPath: string;
 
     fExludedCount: Integer;
@@ -35,10 +36,11 @@ type
     Folders: array of TCompareFolder;
     Files: array of TCompareFile;
 
-    constructor Create(aFilter: string);
+    constructor Create(aFilterFiles, aFilterFolders: string);
     destructor Destroy; override;
 
-    function IsExludeFileName(FileName:string):boolean;
+    function IsExludeFileName(aFileName: string): boolean;
+    function IsExludeFolderName(aFolderName: string): boolean;
     function GetFullPath(FolderID:integer):string;
     function GetRelativePath(FolderID:integer):string;
     function GetRelativeFileName(FileID:integer):string;
@@ -62,35 +64,58 @@ implementation
 
 
 { TScan }
-constructor TScan.Create(aFilter: string);
+constructor TScan.Create(aFilterFiles, aFilterFolders: string);
 begin
   inherited Create;
 
-  fFilters := TStringList.Create;
-  fFilters.Delimiter := ';';
-  fFilters.StrictDelimiter := True;
-  fFilters.DelimitedText := aFilter;
+  fFilterFiles := TStringList.Create;
+  fFilterFiles.Delimiter := ';';
+  fFilterFiles.StrictDelimiter := True;
+  fFilterFiles.DelimitedText := aFilterFiles;
+  fFilterFolders := TStringList.Create;
+  fFilterFolders.Delimiter := ';';
+  fFilterFolders.StrictDelimiter := True;
+  fFilterFolders.DelimitedText := aFilterFolders;
 end;
 
 
 destructor TScan.Destroy;
 begin
-  fFilters.Free;
+  fFilterFiles.Free;
+  fFilterFolders.Free;
 
   inherited;
 end;
 
 
 {Check wherever filename should be excluded }
-function TScan.IsExludeFileName(FileName: string): Boolean;
+function TScan.IsExludeFileName(aFileName: string): Boolean;
 var
   I: Integer;
 begin
   Result := False;
-  FileName := UpperCase(FileName);
+  aFileName := UpperCase(aFileName);
 
-  for I := 0 to fFilters.Count - 1 do
-  if MatchesMask(FileName, fFilters[I]) then
+  for I := 0 to fFilterFiles.Count - 1 do
+  if MatchesMask(aFileName, fFilterFiles[I]) then
+  begin
+    Inc(fExludedCount);
+    Result := True;
+    Break;
+  end;
+end;
+
+
+{Check wherever filename should be excluded }
+function TScan.IsExludeFolderName(aFolderName: string): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  aFolderName := UpperCase(aFolderName);
+
+  for I := 0 to fFilterFolders.Count - 1 do
+  if MatchesMask(aFolderName, fFilterFolders[I]) then
   begin
     Inc(fExludedCount);
     Result := True;
@@ -180,12 +205,15 @@ begin
   repeat
     if (SearchRec.Name<>'.')and(SearchRec.Name<>'..') then
       if (SearchRec.Attr and faDirectory = faDirectory) then begin
-        inc(i);
-        if i+1>=length(Folders) then
-          setlength(Folders,i+100);
-        Folders[i].Name:=SearchRec.Name;
-        Folders[i].Time:=SearchRec.Time;
-        Folders[i].ParentID:=FolderID;
+        if not IsExludeFolderName(SearchRec.Name) then
+        begin
+          inc(i);
+          if i+1>=length(Folders) then
+            setlength(Folders,i+100);
+          Folders[i].Name:=SearchRec.Name;
+          Folders[i].Time:=SearchRec.Time;
+          Folders[i].ParentID:=FolderID;
+        end;
       end
       else
       if not IsExludeFileName(SearchRec.Name) then begin
