@@ -26,13 +26,14 @@ var
   {$IFDEF GALAXY_SCREENSAVER}
   LastCursorMove: Cardinal;
   {$ENDIF}
-  OldTimeFPS,OldFrameTimes,FrameTime,FrameCount: Cardinal;
+  OldTimeFPS, OldFrameTimes, FrameTime, FrameCount: Cardinal;
 
 
 implementation
-{$R *.DFM}
-uses Unit_Render, Unit_Galaxy;
+uses
+  Unit_Render, Unit_Galaxy;
 
+{$R *.DFM}
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
@@ -42,8 +43,8 @@ begin
   LastCursorMove := GetTickCount;
   {$ENDIF}
 
-  fGalaxy := TGalaxy.Create(550, Max(ClientWidth, ClientHeight));
-  fRender := TRender.Create(Handle, ClientWidth, ClientHeight);
+  gGalaxy := TGalaxy.Create(550, Max(ClientWidth, ClientHeight));
+  gRender := TRender.Create(Handle, ClientWidth, ClientHeight);
 
   Application.OnIdle := OnIdle;
   FormResize(Self);
@@ -62,24 +63,26 @@ begin
   OldTimeFPS := GetTickCount;
   if FrameTime > 1000 then
     FrameTime := 1000;
-  inc(OldFrameTimes, FrameTime);
-  inc(FrameCount);
+  Inc(OldFrameTimes, FrameTime);
+  Inc(FrameCount);
   if OldFrameTimes >= FPS_INTERVAL then
   begin
-    Caption := floattostr(RoundTo(1000 / (OldFrameTimes / FrameCount), -2)) + ' fps';
+    Caption := FloatToStr(RoundTo(1000 / (OldFrameTimes / FrameCount), -2)) + ' fps';
     OldFrameTimes := 0;
     FrameCount := 0;
   end; //FPS calculation complete
 
-  fRender.Render;
+  gGalaxy.Update;
+  gRender.Render;
+
   Done := False;
 end;
 
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
-  fRender.Free;
-  fGalaxy.Free;
+  gRender.Free;
+  gGalaxy.Free;
 end;
 
 
@@ -95,7 +98,7 @@ end;
 procedure TForm1.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
   if ssLeft in Shift then
-    fGalaxy.Add(X - ClientWidth / 2, Y - ClientHeight / 2);
+    gGalaxy.Add(X - ClientWidth / 2, Y - ClientHeight / 2);
 
   {$IFDEF GALAXY_SCREENSAVER}
   Cursor := crDefault;
@@ -106,17 +109,17 @@ end;
 
 procedure TForm1.FormMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  fGalaxy.Add(X - ClientWidth / 2, Y - ClientHeight / 2);
+  gGalaxy.Add(X - ClientWidth / 2, Y - ClientHeight / 2);
 end;
 
 
 procedure TForm1.FormResize(Sender: TObject);
 begin
-  if fRender = nil then
+  if gRender = nil then
     Exit;
 
-  fGalaxy.Resize(ClientWidth, ClientHeight);
-  fRender.Resize(ClientWidth, ClientHeight);
+  gGalaxy.Resize(ClientWidth, ClientHeight);
+  gRender.Resize(ClientWidth, ClientHeight);
 end;
 
 

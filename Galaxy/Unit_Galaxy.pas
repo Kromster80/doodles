@@ -1,15 +1,18 @@
 unit Unit_Galaxy;
 interface
-uses Classes, Controls, KromUtils, Math, Windows, SysUtils;
+uses
+  Classes, Controls, KromUtils, Math, Windows, SysUtils;
 
 type
+  // Use Double precision for smooth calcultions
   TVector2f = record X,Y: Double; end;
 
   TParticle = record
-    Loc: TVector2f; //Position
-    Vec: TVector2f; //Vector
-    Temp: Single; //Temperature
+    Loc: TVector2f; // Position
+    Vec: TVector2f; // Vector
+    Temp: Single;   // Temperature
   end;
+  PParticle = ^TParticle;
 
   TGalaxy = class
   private
@@ -26,16 +29,15 @@ type
 
 
 var
-  fGalaxy: TGalaxy;
-
-  GravityK: Word = 100;
-  ElastisityK: Word = 250;
+  gGalaxy: TGalaxy;
 
 
 implementation
 
 
 const
+  GravityK = 100;
+  ElastisityK = 250;
   ParticleRadius = 3;
   ParticleRadiusSq = ParticleRadius * ParticleRadius;
 
@@ -125,17 +127,17 @@ end;
 
 procedure TGalaxy.Resize(aX,aY: Integer);
 begin
-  //Update bounds, particles will be clipped in Update
-  fRadX := max(aX div 2, 1);
-  fRadY := max(aY div 2, 1);
+  // Update bounds, particles will be clipped in Update
+  fRadX := Max(aX div 2, 1);
+  fRadY := Max(aY div 2, 1);
 end;
 
 
 procedure TGalaxy.Update;
 var
+  Pt, Pk: PParticle;
   RotationCoef: Double;
   PX, PY, RX, RY: Double;
-
   Delta: Double;
   I, K: Integer;
   DX, DY: Double;
@@ -150,12 +152,14 @@ begin
 
   for I := 0 to fCount - 1 do
   begin
+    Pt := @Particles[I];
+
     //Move particle
-    Particles[I].Loc.X := Particles[I].Loc.X + Particles[I].Vec.X * Delta;
-    Particles[I].Loc.Y := Particles[I].Loc.Y + Particles[I].Vec.Y * Delta;
+    Pt.Loc.X := Pt.Loc.X + Pt.Vec.X * Delta;
+    Pt.Loc.Y := Pt.Loc.Y + Pt.Vec.Y * Delta;
 
     //When particles fly away we return them back as hot
-    if (Abs(Particles[I].Loc.X) > fRadX) or (Abs(Particles[I].Loc.Y) > fRadY) then
+    if (Abs(Pt.Loc.X) > fRadX) or (Abs(Pt.Loc.Y) > fRadY) then
     begin
       RotationCoef := 1.5 + Random * 0.4 + 0.1;
 
@@ -164,23 +168,24 @@ begin
       RX := (PY) * 12 * RotationCoef;
       RY := -(PX) * 12 * RotationCoef;
 
-      Particles[I].Loc.X := PX * 400;
-      Particles[I].Loc.Y := PY * 400;
+      Pt.Loc.X := PX * 400;
+      Pt.Loc.Y := PY * 400;
 
-      Particles[I].Vec.X := (Random - 0.5) * 6 + 3 * RX;
-      Particles[I].Vec.Y := (Random - 0.5) * 6 + 3 * RY;
+      Pt.Vec.X := (Random - 0.5) * 6 + 3 * RX;
+      Pt.Vec.Y := (Random - 0.5) * 6 + 3 * RY;
 
-      Particles[I].Temp := 0.75 + Random / 2;
+      Pt.Temp := 0.75 + Random / 2;
     end;
 
-
     //Cooling
-    Particles[I].Temp := Max(Particles[I].Temp - Particles[I].Temp * Delta * 0.0825, 0.01);
+    Pt.Temp := Max(Pt.Temp - Pt.Temp * Delta * 0.0825, 0.01);
 
+    // Interactions
     for K := 0 to I - 1 do
     begin
-      DX := Particles[I].Loc.X - Particles[K].Loc.X;
-      DY := Particles[I].Loc.Y - Particles[K].Loc.Y;
+      Pk := @Particles[K];
+      DX := Pt.Loc.X - Pk.Loc.X;
+      DY := Pt.Loc.Y - Pk.Loc.Y;
       DistSqr := DX * DX + DY * DY;
       Dist := Sqrt(DistSqr);
       DistCub := DistSqr * Dist; //Dist^3
@@ -198,24 +203,24 @@ begin
         ForceX := ForceX - ElastisityK * (DX / (Dist + 0.001)) * Sqr(ParticleRadius - Dist) / ParticleRadius;
         ForceY := ForceY - ElastisityK * (DY / (Dist + 0.001)) * Sqr(ParticleRadius - Dist) / ParticleRadius;
 
-        MidVelX := (Particles[I].Vec.X + Particles[K].Vec.X) * 0.5;
-        MidVelY := (Particles[I].Vec.Y + Particles[K].Vec.Y) * 0.5;
+        MidVelX := (Pt.Vec.X + Pk.Vec.X) * 0.5;
+        MidVelY := (Pt.Vec.Y + Pk.Vec.Y) * 0.5;
 
         Coef := 1.0 - (1.0 - Coef) * 0.015;
 
-        Particles[I].Temp := Min(Particles[I].Temp + Coef * Delta * 0.007, 1);
-        Particles[K].Temp := Min(Particles[K].Temp + Coef * Delta * 0.007, 1);
+        Pt.Temp := Min(Pt.Temp + Coef * Delta * 0.007, 1);
+        Pk.Temp := Min(Pk.Temp + Coef * Delta * 0.007, 1);
 
-        Particles[I].Vec.X := Particles[I].Vec.X * Coef + MidVelX * (1 - Coef);
-        Particles[I].Vec.Y := Particles[I].Vec.Y * Coef + MidVelY * (1 - Coef);
-        Particles[K].Vec.X := Particles[K].Vec.X * Coef + MidVelX * (1 - Coef);
-        Particles[K].Vec.Y := Particles[K].Vec.Y * Coef + MidVelY * (1 - Coef);
+        Pt.Vec.X := Pt.Vec.X * Coef + MidVelX * (1 - Coef);
+        Pt.Vec.Y := Pt.Vec.Y * Coef + MidVelY * (1 - Coef);
+        Pk.Vec.X := Pk.Vec.X * Coef + MidVelX * (1 - Coef);
+        Pk.Vec.Y := Pk.Vec.Y * Coef + MidVelY * (1 - Coef);
       end;
 
-      Particles[I].Vec.X := Particles[I].Vec.X - ForceX * Delta;
-      Particles[I].Vec.Y := Particles[I].Vec.Y - ForceY * Delta;
-      Particles[K].Vec.X := Particles[K].Vec.X + ForceX * Delta;
-      Particles[K].Vec.Y := Particles[K].Vec.Y + ForceY * Delta;
+      Pt.Vec.X := Pt.Vec.X - ForceX * Delta;
+      Pt.Vec.Y := Pt.Vec.Y - ForceY * Delta;
+      Pk.Vec.X := Pk.Vec.X + ForceX * Delta;
+      Pk.Vec.Y := Pk.Vec.Y + ForceY * Delta;
     end;
   end;
 end;
