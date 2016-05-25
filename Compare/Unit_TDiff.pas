@@ -131,7 +131,7 @@ begin
 
   DiffFolders(0, 0);
 
-  for I := 1 to fScan1.CurFolder do
+  for I := 1 to fScan1.CountFolders do
     if DiffCheckParentCorrespondID(I) <> -1 then
       DiffFolders(I, fScan1.Folders[I].CorrespondingID);
 
@@ -141,7 +141,7 @@ begin
 
   DiffFiles(0, 0);
 
-  for I := 1 to fScan1.CurFolder do
+  for I := 1 to fScan1.CountFolders do
     if DiffCheckParentCorrespondID(I) <> -1 then
       DiffFiles(I, fScan1.Folders[I].CorrespondingID);
 end;

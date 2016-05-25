@@ -200,7 +200,7 @@ begin
     SwitchButtons(swStart);
   end;
 
-  Memo1.Lines.Add('Temporary files excluded ' + IntToStr(fScan1.ExludedCount) + ' and ' + IntToStr(fScan2.ExludedCount));
+  Memo1.Lines.Add('Temporary files excluded ' + IntToStr(fScan1.CountExluded) + ' and ' + IntToStr(fScan2.CountExluded));
 end;
 
 
@@ -230,8 +230,8 @@ begin
     begin
       new := aListView.Items.Add;
       new.Caption := aDiff.Scan.GetRelativePath(aDiff.Folders[I].ItemID);
-      new.SubItems.Add(aDiff.Scan.GetFolderDateTime(aDiff.Folders[I].ItemID));
-      new.SubItems.Add(aDiff.Scan.GetFolderSize(aDiff.Folders[I].ItemID));
+      new.SubItems.Add(aDiff.Scan.Folders[aDiff.Folders[I].ItemID].DateTimeString);
+      new.SubItems.Add(aDiff.Scan.Folders[aDiff.Folders[I].ItemID].SizeString);
       new.SubItems.Add('A');
       new.ImageIndex := 0;
     end;
@@ -240,8 +240,8 @@ begin
     begin
       new := aListView.Items.Add;
       new.Caption := aDiff.Scan.GetRelativeFileName(aDiff.Files[I].ItemID);
-      new.SubItems.Add(aDiff.Scan.GetFileDateTime(aDiff.Files[I].ItemID));
-      new.SubItems.Add(aDiff.Scan.GetFileSize(aDiff.Files[I].ItemID));
+      new.SubItems.Add(aDiff.Scan.Files[aDiff.Files[I].ItemID].DateTimeString);
+      new.SubItems.Add(aDiff.Scan.Files[aDiff.Files[I].ItemID].SizeString);
       case aDiff.Files[I].DiffType of
         dtAdded:   new.SubItems.Add('A');
         dtOlder:   new.SubItems.Add('O');
@@ -366,7 +366,7 @@ begin
       decs(s2);
       //CopyList1:=CopyList1+s1+'\*.*'+#0;
       //CopyList2:=CopyList2+s2+'\'+#0;
-      if DirectoryExists(s1) then
+      if SysUtils.DirectoryExists(s1) then
         if CopyDir(s1,s2) then begin
           ToDel[i]:=true;
           Memo1.Lines.Add(s1+'\ copied')
@@ -419,7 +419,7 @@ begin
     if s[length(s)]='\' then begin
       decs(s); //Remove "\" from end
 
-      if DirectoryExists(s) then begin
+      if SysUtils.DirectoryExists(s) then begin
         for h:=1 to 3 do //now this is funny, sometimes first request doesn't work, but second works fine, ?
           if DelDir(s) then
             ToDel[i]:=true;

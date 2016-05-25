@@ -1,6 +1,7 @@
 unit Unit_TScan;
 interface
-uses Forms, Classes, StdCtrls, Windows, ComCtrls, SysUtils, DateUtils, KromUtils, KromIOUtils, Masks;
+uses
+  Forms, Classes, StdCtrls, Windows, ComCtrls, SysUtils, DateUtils, KromUtils, KromIOUtils, Masks;
 
 type
   TCompareFolder = record
@@ -11,6 +12,9 @@ type
     SubFolderA, SubFolderZ: Integer;
     SubFileA, SubFileZ: Integer;
     CorrespondingID: Integer;
+    class function New(aName: string; aTime: Integer; aParentId: Integer): TCompareFolder; static;
+    function DateTimeString: string;
+    function SizeString: string;
   end;
 
   TCompareFile = record
@@ -19,6 +23,9 @@ type
     Size: Int64; //4GB+
     ParentID: Integer;
     CorrespondingID: Integer;
+    class function New(aName: string; aTime: Integer; aSize: Int64; aParentId: Integer): TCompareFile; static;
+    function DateTimeString: string;
+    function SizeString: string;
   end;
 
 type
@@ -29,37 +36,80 @@ type
     fFilterFolders: TStringList;
     fScanPath: string;
 
-    fExludedCount: Integer;
+    fCountFolders: Integer;
+    fCountFiles: Integer;
+
+    fCountExluded: Integer;
+    function GetFullPath(aFolderID: Integer): string;
+    function SkipFile(aFileName: string): boolean;
+    function SkipFolder(aFolderName: string): boolean;
+    procedure IncParentFoldersSize(aFolderID: Integer; aSize: Int64);
   public
-    CurFolder, CurFile: Integer;
     Folders: array of TCompareFolder;
     Files: array of TCompareFile;
 
     constructor Create(aFilterFiles, aFilterFolders: string);
     destructor Destroy; override;
 
-    function SkipFile(aFileName: string): boolean;
-    function SkipFolder(aFolderName: string): boolean;
-    function GetFullPath(FolderID: Integer): string;
-    function GetRelativePath(FolderID: Integer): string;
-    function GetRelativeFileName(FileID: Integer): string;
-    function GetFolderDateTime(FolderID: Integer): string;
-    function GetFileDateTime(FileID: Integer): string;
-    function GetFolderSize(FolderID: Integer): string;
-    function GetFileSize(FileID: Integer): string;
-    procedure IncParentFoldersSize(FolderID: Integer; Size: Int64);
-    procedure SearchFolder(Path: string; FolderID: Integer);
+    function GetRelativePath(aFolderID: Integer): string;
+    function GetRelativeFileName(aFileID: Integer): string;
+    procedure SearchFolder(aPath: string; aFolderID: Integer);
     function ScanPath(aPath: string; aProgress: TLabel; aApp: TApplication): Boolean;
 
     procedure Clear;
     function ScanPaths(aPath1: string; aProgress1: TLabel; aApp: TApplication): Boolean;
     procedure StopCompare;
-    property ExludedCount: Integer read fExludedCount;
     property Path: string read fScanPath;
+    property CountFolders: Integer read fCountFolders;
+    property CountFiles: Integer read fCountFiles;
+    property CountExluded: Integer read fCountExluded;
   end;
 
 
 implementation
+
+
+{ TCompareFolder }
+function TCompareFolder.DateTimeString: string;
+begin
+  DateTimeToString(Result, 'c', FileDateToDateTime(FileTime));
+end;
+
+
+class function TCompareFolder.New(aName: string; aTime: Integer; aParentId: Integer): TCompareFolder;
+begin
+  Result.Name := aName;
+  Result.FileTime := aTime;
+  Result.ParentID := aParentId;
+end;
+
+
+function TCompareFolder.SizeString: string;
+begin
+  Result := ReturnSize(Size);
+end;
+
+
+{ TCompareFile }
+function TCompareFile.DateTimeString: string;
+begin
+  DateTimeToString(Result, 'c', FileDateToDateTime(FileTime));
+end;
+
+
+class function TCompareFile.New(aName: string; aTime: Integer; aSize: Int64; aParentId: Integer): TCompareFile;
+begin
+  Result.Name := aName;
+  Result.FileTime := aTime;
+  Result.Size := aSize;
+  Result.ParentID := aParentId;
+end;
+
+
+function TCompareFile.SizeString: string;
+begin
+  Result := ReturnSize(Size);
+end;
 
 
 { TScan }
@@ -98,7 +148,7 @@ begin
   for I := 0 to fFilterFiles.Count - 1 do
   if MatchesMask(aFileName, fFilterFiles[I]) then
   begin
-    Inc(fExludedCount);
+    Inc(fCountExluded);
     Result := True;
     Break;
   end;
@@ -116,7 +166,7 @@ begin
   for I := 0 to fFilterFolders.Count - 1 do
   if MatchesMask(aFolderName, fFilterFolders[I]) then
   begin
-    Inc(fExludedCount);
+    Inc(fCountExluded);
     Result := True;
     Break;
   end;
@@ -124,139 +174,108 @@ end;
 
 
 //Return full Path for given FolderID
-function TScan.GetFullPath(FolderID: Integer): string;
+function TScan.GetFullPath(aFolderID: Integer): string;
 var
   SearchPath: string;
 begin
   SearchPath := '';
-  while (FolderID <> -1) do
+  while (aFolderID <> -1) do
   begin
-    SearchPath := Folders[FolderID].Name + '\' + SearchPath;
-    FolderID := Folders[FolderID].ParentID;
+    SearchPath := Folders[aFolderID].Name + '\' + SearchPath;
+    aFolderID := Folders[aFolderID].ParentID;
   end;
   Result := SearchPath;
 end;
 
 
-//Return Path for given FolderID except topmost parent folder
-function TScan.GetRelativePath(FolderID: Integer): string;
+// Return Path for given FolderID except topmost parent folder
+function TScan.GetRelativePath(aFolderID: Integer): string;
 var
   SearchPath: string;
 begin
   SearchPath := '';
-  while (FolderID <> 0) do
+  while (aFolderID <> 0) do
   begin
-    SearchPath := Folders[FolderID].Name + '\' + SearchPath;
-    FolderID := Folders[FolderID].ParentID;
+    SearchPath := Folders[aFolderID].Name + '\' + SearchPath;
+    aFolderID := Folders[aFolderID].ParentID;
   end;
   Result := SearchPath;
 end;
 
 
-//Relative filename including path
-function TScan.GetRelativeFileName(FileID: Integer): string;
+// Relative filename including path
+function TScan.GetRelativeFileName(aFileID: Integer): string;
 begin
-  Result := GetRelativePath(Files[FileID].ParentID) + Files[FileID].Name;
+  Result := GetRelativePath(Files[aFileID].ParentID) + Files[aFileID].Name;
 end;
 
 
-function TScan.GetFolderDateTime(FolderID: Integer): string;
+procedure TScan.IncParentFoldersSize(aFolderID: Integer; aSize: Int64);
 begin
-  DateTimeToString(Result, 'c', FileDateToDateTime(Folders[FolderID].FileTime));
-end;
-
-
-function TScan.GetFileDateTime(FileID: Integer): string;
-begin
-  DateTimeToString(Result, 'c', FileDateToDateTime(Files[FileID].FileTime));
-end;
-
-
-function TScan.GetFolderSize(FolderID: Integer): string;
-begin
-  Result := ReturnSize(Folders[FolderID].Size);
-end;
-
-
-function TScan.GetFileSize(FileID: Integer): string;
-begin
-  Result := ReturnSize(Files[FileID].Size);
-end;
-
-
-procedure TScan.IncParentFoldersSize(FolderID: Integer; Size: Int64);
-begin
-  while (FolderID <> 0) do
+  while (aFolderID <> 0) do
   begin
-    Inc(Folders[FolderID].Size, Size);
-    FolderID := Folders[FolderID].ParentID;
+    Inc(Folders[aFolderID].Size, aSize);
+    aFolderID := Folders[aFolderID].ParentID;
   end;
 end;
 
 
-procedure TScan.SearchFolder(Path: string; FolderID: Integer);
+procedure TScan.SearchFolder(aPath: string; aFolderID: Integer);
 var
   SearchRec: TSearchRec;
-  I, K: Integer;
   DT:_FILETIME;
   ST, STL:_SYSTEMTIME;
   D: TDateTime;
 begin
-  FindFirst(Path + '\*', faAnyFile, SearchRec);
-  I := CurFolder;
-  K := CurFile;
-  Folders[FolderID].SubFolderA := I+1;
-  Folders[FolderID].SubFileA := K+1;
+  FindFirst(aPath + '\*', faAnyFile, SearchRec);
+
+  Folders[aFolderID].SubFolderA := fCountFolders + 1;
+  Folders[aFolderID].SubFileA := fCountFiles + 1;
   repeat
-    //Skip uplinks
+    // Skip uplinks
     if (SearchRec.Name = '.') or (SearchRec.Name = '..') then
       Continue;
 
     if (SearchRec.Attr and faDirectory = faDirectory) then
     begin
-      //Process folder
+      // Process folder
       if not SkipFolder(SearchRec.Name) then
       begin
-        Inc(I);
-        if I+1 >= Length(Folders) then
-          SetLength(Folders, I+100);
-        Folders[I].Name := SearchRec.Name;
-        Folders[I].FileTime := SearchRec.Time;
-        Folders[I].ParentID := FolderID;
+        Inc(fCountFolders);
+        if fCountFolders+1 >= Length(Folders) then
+          SetLength(Folders, fCountFolders+100);
+        Folders[fCountFolders] := TCompareFolder.New(SearchRec.Name, SearchRec.Time, aFolderID);
       end;
     end
     else
     begin
-      //Process file
+      // Process file
       if not SkipFile(SearchRec.Name) then
       begin
-        Inc(K);
-        if K+1 >= Length(Files) then
-          SetLength(Files, K+100);
-        Files[K].Name := SearchRec.Name;
-        Files[K].FileTime := SearchRec.Time;
-        Files[K].Size := Int64(SearchRec.FindData.nFileSizeHigh) shl Int64(32) +
-                         Int64(SearchRec.FindData.nFileSizeLow);
+        Inc(fCountFiles);
+        if fCountFiles+1 >= Length(Files) then
+          SetLength(Files, fCountFiles+100);
+        Files[fCountFiles] := TCompareFile.New(SearchRec.Name, SearchRec.Time,
+                                                Int64(SearchRec.FindData.nFileSizeHigh) shl Int64(32) +
+                                                Int64(SearchRec.FindData.nFileSizeLow),
+                                                aFolderID);
 
           {
         FileTimeToLocalFileTime(SearchRec.FindData.ftLastWriteTime,DT);
         FileTimeToSystemTime(DT,ST);
         SystemTimeToTzSpecificLocalTime(nil, ST, STL);
         D := EncodeDateTime(STL.wYear, STL.wMonth, STL.wDay, STL.wHour, STL.wMinute, STL.wSecond, STL.wMilliseconds);
-        Files[K].Time:=DateTimeToFileDate(D);
+        Files[fCountFiles].Time:=DateTimeToFileDate(D);
           }
 
-        Files[K].ParentID := FolderID;
-        IncParentFoldersSize(FolderID, Files[K].Size);
+        IncParentFoldersSize(aFolderID, Files[fCountFiles].Size);
       end;
     end;
   until (FindNext(SearchRec) <> 0);
   FindClose(SearchRec);
 
-  Folders[FolderID].SubFolderZ := I;
-  Folders[FolderID].SubFileZ := K;
-  CurFolder := I;
-  CurFile := K;
+  Folders[aFolderID].SubFolderZ := fCountFolders;
+  Folders[aFolderID].SubFileZ := fCountFiles;
 end;
 
 
@@ -296,11 +315,11 @@ end;
 procedure TScan.Clear;
 begin
   fScanPath := '';
-  CurFolder := 0;
-  CurFile := 0;
   SetLength(Folders, 0);
   SetLength(Files, 0);
-  fExludedCount := 0;
+  fCountFolders := 0;
+  fCountFiles := 0;
+  fCountExluded := 0;
 end;
 
 
