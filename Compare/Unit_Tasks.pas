@@ -1,6 +1,7 @@
 unit Unit_Tasks;
 interface
-uses Classes, Generics.Collections, SysUtils, XMLIntf;
+uses
+  Classes, Generics.Collections, SysUtils, XMLDoc, XMLIntf;
 
 
 type
@@ -35,9 +36,12 @@ type
 
 
   TTasks = class(TList<TTask>)
-  public
+  private
     procedure LoadFromXML(aNode: IXMLNode);
     procedure SaveToXML(aNode: IXMLNode);
+  public
+    procedure LoadSettings(aFile: string);
+    procedure SaveSettings(aFile: string);
   end;
 
 
@@ -167,6 +171,49 @@ begin
     N := aNode.AddChild('t' + IntToStr(I));
     Items[I].SaveToXML(N);
   end;
+end;
+
+
+procedure TTasks.LoadSettings(aFile: string);
+var
+  X: IXMLDocument;
+  nodeRoot, nodeTasks: IXMLNode;
+begin
+  if not FileExists(aFile) then
+    Exit;
+
+  X := TXMLDocument.Create(nil);
+  X.LoadFromFile(aFile);
+  X.Active := True;
+
+  nodeRoot := X.DocumentElement;
+
+  //Load Tasks
+  nodeTasks := nodeRoot.ChildNodes['Tasks'];
+  LoadFromXML(nodeTasks);
+
+  X := nil;
+end;
+
+
+procedure TTasks.SaveSettings(aFile: string);
+var
+  X: IXMLDocument;
+  nodeRoot, nodeTasks: IXMLNode;
+begin
+  X := NewXMLDocument;
+  X.Encoding := 'utf-8';
+  X.Options := [doNodeAutoIndent];
+//  X.Active := True;
+
+  nodeRoot := X.AddChild('Root');
+
+  //Save Tasks
+  nodeTasks := nodeRoot.AddChild('Tasks');
+  SaveToXML(nodeTasks);
+
+  X.SaveToFile(aFile);
+  X := nil;
 end;
 
 

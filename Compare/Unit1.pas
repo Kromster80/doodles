@@ -1,6 +1,5 @@
 unit Unit1;
 interface
-
 uses
   Windows, Messages, ShellAPI, SysUtils, Classes, Graphics, Controls, Forms, StrUtils,
   StdCtrls, ComCtrls, FileCtrl, ExtCtrls, Dialogs, XMLDoc, XMLIntf,
@@ -8,6 +7,8 @@ uses
   Menus, Math;
 
 type
+  TGreyButtons = (swStart, swStop, swDisable);
+
   TForm1 = class(TForm)
     ImageList1: TImageList;
     Panel1: TPanel;
@@ -67,11 +68,9 @@ type
     fDiff2: TDiff;
     procedure FillList(aDiff: TDiff; aListView: TListView);
   public
-    procedure GreyButtons(Grey: Boolean);
+    procedure SwitchButtons(aGrey: TGreyButtons);
     procedure RefreshTasks(aIndex: Integer);
     procedure RefreshPaths(aIndex: Integer);
-    procedure LoadSettings(aFile: string);
-    procedure SaveSettings(aFile: string);
   end;
 
 var
@@ -91,9 +90,9 @@ begin
   DragAcceptFiles(Form1.Handle,true);
 
   fTasks := TTasks.Create;
-  LoadSettings(ExeDir + 'compare_settings.xml');
+  fTasks.LoadSettings(ExeDir + 'compare_settings.xml');
 
-  GreyButtons(False);
+  SwitchButtons(swDisable);
 
   RefreshTasks(0);
   RefreshPaths(lstTasks.ItemIndex);
@@ -102,7 +101,7 @@ end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
-  SaveSettings(ExeDir + 'compare_settings.xml');
+  fTasks.SaveSettings(ExeDir + 'compare_settings.xml');
   fTasks.Free;
 end;
 
@@ -113,28 +112,6 @@ begin
   Panel2.Width := ClientWidth div 2;
   Panel3.Width := ClientWidth div 2;
   Panel3.Left  := ClientWidth - Panel3.Width;
-end;
-
-
-procedure TForm1.LoadSettings(aFile: string);
-var
-  X: IXMLDocument;
-  nodeRoot, nodeTasks: IXMLNode;
-begin
-  if not FileExists(aFile) then
-    Exit;
-
-  X := TXMLDocument.Create(Self);
-  X.LoadFromFile(aFile);
-  X.Active := True;
-
-  nodeRoot := X.DocumentElement;
-
-  //Load Tasks
-  nodeTasks := nodeRoot.ChildNodes['Tasks'];
-  fTasks.LoadFromXML(nodeTasks);
-
-  X := nil;
 end;
 
 
@@ -157,27 +134,6 @@ end;
 procedure TForm1.lstTasksClick(Sender: TObject);
 begin
   RefreshPaths(lstTasks.ItemIndex);
-end;
-
-
-procedure TForm1.SaveSettings(aFile: string);
-var
-  X: IXMLDocument;
-  nodeRoot, nodeTasks: IXMLNode;
-begin
-  X := NewXMLDocument;
-  X.Encoding := 'utf-8';
-  X.Options := [doNodeAutoIndent];
-//  X.Active := True;
-
-  nodeRoot := X.AddChild('Root');
-
-  //Save Tasks
-  nodeTasks := nodeRoot.AddChild('Tasks');
-  fTasks.SaveToXML(nodeTasks);
-
-  X.SaveToFile(aFile);
-  X := nil;
 end;
 
 
@@ -212,14 +168,14 @@ end;
 //Disable buttons while compare tasks is executed
 procedure TForm1.LaunchCompareClick(Sender: TObject);
 var
-  I,K: Integer;
+  I: Integer;
 begin
   I := lstTasks.ItemIndex;
   if I = -1 then Exit;
 
   Memo1.Clear;
 
-  GreyButtons(True);
+  SwitchButtons(swStop);
   try
     FreeAndNil(fScan1);
     FreeAndNil(fScan2);
@@ -241,7 +197,7 @@ begin
     FillList(fDiff1, ListView1);
     FillList(fDiff2, ListView2);
   finally
-    GreyButtons(false);
+    SwitchButtons(swStart);
   end;
 
   Memo1.Lines.Add('Temporary files excluded ' + IntToStr(fScan1.ExludedCount) + ' and ' + IntToStr(fScan2.ExludedCount));
@@ -384,12 +340,12 @@ begin
     Path_B := fScan1.path;
   end
   else
-    Assert(False, 'Bad sender');
+    raise Exception.Create('Unexpected CopyOver sender');
 
   if FindAnyMatches then
     if MessageBox(Form1.Handle,'Overwrite matching files?','Please confirm', MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2 ) <> IDYES then exit;
 
-  GreyButtons(true);
+  SwitchButtons(swStop);
   setlength(ToDel,LV_A.Items.Count+1);
   CopyList1:='';
   CopyList2:='';
@@ -426,7 +382,7 @@ begin
     LV_A.Items[i-1].Delete;
   end;
 
-  GreyButtons(False);
+  SwitchButtons(swStart);
 end;
 
 
@@ -451,10 +407,10 @@ begin
     Path_A:=fScan2.Path;
     Path_B:=fScan1.Path;
   end else
-  Assert(false,'Wrong Delete sender');
+    raise Exception.Create('Unexpected Delete sender');
 
   if MessageBox(Form1.Handle,'Delete these files?','Please confirm', MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2 ) <> IDYES then exit;
-  GreyButtons(true);
+  SwitchButtons(swStop);
   setlength(ToDel,LV_A.Items.Count+1);
   for i:=1 to LV_A.Items.Count do
   if (LV_A.Items.Item[i-1].Selected)or(LV_A.SelCount=0) then begin
@@ -495,12 +451,13 @@ begin
 
   LV_B.Repaint;
 
-  GreyButtons(false);
+  SwitchButtons(swStart);
 end;
 
 
 procedure TForm1.ListBox1Click(Sender: TObject);
-var I,K: Integer;
+var
+  I, K: Integer;
 begin
   DirectoryListBox1.Directory := ExeDir;
   DirectoryListBox2.Directory := ExeDir;
@@ -511,8 +468,17 @@ begin
   K := lstPaths.ItemIndex;
   if not InRange(K, 0, fTasks[I].Count - 1) then Exit;
 
+  if not SysUtils.DirectoryExists(fTasks[I].Paths[K].A)
+  or not SysUtils.DirectoryExists(fTasks[I].Paths[K].B) then
+  begin
+    MessageBox(Handle, 'Path not found', 'Error', MB_OK + MB_ICONERROR);
+    SwitchButtons(swDisable);
+    Exit;
+  end;
+
   DirectoryListBox1.Directory := fTasks[I].Paths[K].A;
   DirectoryListBox2.Directory := fTasks[I].Paths[K].B;
+  SwitchButtons(swStart);
 end;
 
 
@@ -568,25 +534,25 @@ begin
 end;
 
 
-procedure TForm1.GreyButtons(Grey: Boolean);
+procedure TForm1.SwitchButtons(aGrey: TGreyButtons);
 var
   Act1, Act2: Boolean;
 begin
-  btnTaskAdd.Enabled := not Grey;
-  btnTaskRem.Enabled := not Grey;
-  btnPathAdd.Enabled := not Grey;
-  btnPathRem.Enabled := not Grey;
+  btnTaskAdd.Enabled := aGrey in [swStart];
+  btnTaskRem.Enabled := aGrey in [swStart];
+  btnPathAdd.Enabled := aGrey in [swStart];
+  btnPathRem.Enabled := aGrey in [swStart];
 
-  B_LaunchCompare.Enabled := not Grey;
-  B_StopCompare.Enabled := Grey;
+  B_LaunchCompare.Enabled := aGrey in [swStart];
+  B_StopCompare.Enabled := aGrey in [swStop];
 
-  Act1 := not Grey and (ListView1.Items.Count > 0);
+  Act1 := (aGrey in [swStart]) and (ListView1.Items.Count > 0);
   B_CopyOver1.Enabled := Act1;
   B_Open1.Enabled := Act1;
   B_OpenF1.Enabled := Act1;
   B_Delete1.Enabled := Act1;
 
-  Act2 := not Grey and (ListView2.Items.Count > 0);
+  Act2 := (aGrey in [swStart]) and (ListView2.Items.Count > 0);
   B_CopyOver2.Enabled := Act2;
   B_Open2.Enabled := Act2;
   B_OpenF2.Enabled := Act2;
@@ -612,16 +578,8 @@ end;
 
 
 procedure TForm1.RefreshPaths(aIndex: Integer);
-  function FirstMatch(A, B: string): Integer;
-  var I: Integer;
-  begin
-    for I := 1 to Min(Length(A), Length(B)) do
-      if A[I] <> B[I] then
-        Break;
-    Result := I;
-  end;
 var
-  I,K,H: Integer;
+  I,K: Integer;
   LI: TListItem;
 begin
   lstPaths.Clear;
@@ -631,16 +589,16 @@ begin
 
   for K := 0 to fTasks[I].Count - 1 do
   begin
-    H := FirstMatch(fTasks[I].Paths[K].A, fTasks[I].Paths[K].B) - 1;
     LI := lstPaths.Items.Add;
-    //LI.Caption := 'Caption' + Copy(fTasks[I].Paths[K].A, 1, H);
-    LI.Caption := RightStr(fTasks[I].Paths[K].A, Length(fTasks[I].Paths[K].A) - H);
-    LI.SubItems.Add(RightStr(fTasks[I].Paths[K].B, Length(fTasks[I].Paths[K].B) - H));
-    LI.Checked := True;
+    LI.Caption := fTasks[I].Paths[K].A;
+    LI.SubItems.Add(fTasks[I].Paths[K].B);
+    LI.Checked := fTasks[I].Paths[K].Checked;
   end;
 
   if InRange(aIndex, 0, lstPaths.Items.Count - 1) then
     lstPaths.ItemIndex := aIndex;
+
+  ListBox1Click(nil);
 end;
 
 
@@ -651,21 +609,32 @@ var
   s:string;
   scan: TScan;
 begin
-  if (Sender=B_Open1)or(Sender=B_OpenF1) then begin LV:=ListView1; scan:=fScan1; end;
-  if (Sender=B_Open2)or(Sender=B_OpenF2) then begin LV:=ListView2; scan:=fScan2; end;
+  if (Sender = B_Open1) or (Sender = B_OpenF1) then
+  begin
+    LV := ListView1;
+    Scan := fScan1;
+  end else
+  if (Sender = B_Open2) or (Sender = B_OpenF2) then
+  begin
+    LV := ListView2;
+    Scan := fScan2;
+  end else
+    raise Exception.Create('Unexpected Open sender');
 
   if LV.SelCount > 1 then
-  if MessageBox(Handle, @('Open '+inttostr(LV.SelCount)+' selected items at once?')[1] ,'Please confirm', MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2 ) <> IDYES then
-    Exit;
+    if MessageBox(Handle, PWideChar('Open ' + IntToStr(LV.SelCount) + ' selected items at once?'), 'Please confirm',
+      MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2) <> IDYES then
+      Exit;
 
   for i:=1 to LV.Items.Count do
-  if LV.Items[i-1].Selected then begin
-    s:=scan.Path+'\'+LV.Items[i-1].Caption;
-    if (Sender=B_Open1)or(Sender=B_Open2) then
-      ShellExecute(handle, nil, @(scan.Path+'\'+LV.Items[i-1].Caption)[1], nil, nil, SW_SHOWNORMAL);
-    if (Sender=B_OpenF1)or(Sender=B_OpenF2) then
-      ShellExecute(handle, nil, @ExtractFilePath(scan.Path+'\'+LV.Items[i-1].Caption)[1], nil, nil, SW_SHOWNORMAL);
-  end;
+  if LV.Items[i-1].Selected then
+  begin
+      s := Scan.path + '\' + LV.Items[I - 1].Caption;
+      if (Sender = B_Open1) or (Sender = B_Open2) then
+        ShellExecute(Handle, nil, PWideChar(Scan.path + '\' + LV.Items[I - 1].Caption), nil, nil, SW_SHOWNORMAL);
+      if (Sender = B_OpenF1) or (Sender = B_OpenF2) then
+        ShellExecute(Handle, nil, PWideChar(ExtractFilePath(Scan.path + '\' + LV.Items[I - 1].Caption)), nil, nil, SW_SHOWNORMAL);
+    end;
 end;
 
 
