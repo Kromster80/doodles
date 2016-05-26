@@ -20,42 +20,46 @@ implementation
 {$R *.dfm}
 
 
-//Given that Pi can be estimated using the function 4 * (1 - 1/3 + 1/5 - 1/7 + …)
-//with more terms giving greater accuracy, this is a function that calculates Pi
-//to a required accuracy
+// Given that Pi can be estimated using the function 4 * (1 - 1/3 + 1/5 - 1/7 + …)
+// with more terms giving greater accuracy, this is a function that calculates Pi
+// to a required accuracy
 function CalculatePi(aPrecision: Extended): string;
 var
   Sign: Integer;
-  Divider: Cardinal;
-  Iterations: Cardinal;
+  Divider: Int64;
+  Iterations: Int64;
   Res: Extended;
-  I: Cardinal;
+  I: Int64;
 begin
   Res := 0;
   Sign := 1;
   Divider := 1;
 
-  Assert(aPrecision >= 0.00000001);
+  Assert(aPrecision >= 0.000000001);
 
   Iterations := Round (1 / (aPrecision / 4));
 
-  for I := 0 to Iterations do
+  I := 0;
+  while I < Iterations do
   begin
-    Res := Res + Sign * (1 / Divider);
+    Res := Res + Sign / Divider;
     Sign := -Sign;
     Inc(Divider, 2);
+    Inc(I);
   end;
 
   Res := Res * 4;
 
-  Result := FloatToStr(Res) + #13#10 + FloatToStr(Pi) + #13#10'in ' + FloatToStr(Iterations);
+  Result := 'Calculated: ' + FloatToStr(Res) + sLineBreak +
+            'Constant:   ' + FloatToStr(Pi) + sLineBreak +
+            'in ' + FloatToStr(Iterations);
 end;
 
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
   Memo1.Clear;
-  Memo1.Lines.Add(CalculatePi(0.00000001));
+  Memo1.Lines.Add(CalculatePi(0.000000001));
 end;
 
 
