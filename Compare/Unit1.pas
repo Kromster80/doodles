@@ -395,13 +395,15 @@ var
   LV_A,LV_B:TListView;
   Path_A,Path_B:string;//Delete from A
 begin
-  if Sender=B_Delete1 then begin
+  if Sender=B_Delete1 then
+  begin
     LV_A:=ListView1;
     LV_B:=ListView2;
     Path_A:=fScan1.Path;
     Path_B:=fScan2.Path;
   end else
-  if Sender=B_Delete2 then begin
+  if Sender=B_Delete2 then
+  begin
     LV_A:=ListView2;
     LV_B:=ListView1;
     Path_A:=fScan2.Path;
@@ -413,13 +415,16 @@ begin
   SwitchButtons(swStop);
   setlength(ToDel,LV_A.Items.Count+1);
   for i:=1 to LV_A.Items.Count do
-  if (LV_A.Items.Item[i-1].Selected)or(LV_A.SelCount=0) then begin
+  if (LV_A.Items.Item[i-1].Selected)or(LV_A.SelCount=0) then
+  begin
     s:=Path_A+'\'+LV_A.Items.Item[i-1].Caption;
 
-    if s[length(s)]='\' then begin
+    if s[length(s)]='\' then
+    begin
       decs(s); //Remove "\" from end
 
-      if SysUtils.DirectoryExists(s) then begin
+      if SysUtils.DirectoryExists(s) then
+      begin
         for h:=1 to 3 do //now this is funny, sometimes first request doesn't work, but second works fine, ?
           if DelDir(s) then
             ToDel[i]:=true;
@@ -427,10 +432,11 @@ begin
           Memo1.Lines.Add('DeleteDir failed');
       end else
           Memo1.Lines.Add('DeleteDir failed, no such Dir exists');
-
-    end else begin //Delete file
-
-      if FileExists(s) then begin
+    end else
+    begin
+      //Delete file
+      if FileExists(s) then
+      begin
         FileSetAttr(s, $00000000); //remove all attributes cos file gets deleted anyway
         for h:=1 to 3 do //now this is funny, sometimes first request doesn't work, but second works fine, ?
           if DeleteFile(s) then
@@ -443,7 +449,8 @@ begin
   end;
 
   for i:=LV_A.Items.Count downto 1 do
-  if ToDel[i] then begin
+  if ToDel[i] then
+  begin
     TLI:=LV_B.FindCaption(0,LV_A.Items.Item[i-1].Caption,false,true,true);
     if TLI<>nil then TLI.SubItems[2]:='A';
     LV_A.Items[i-1].Delete;
