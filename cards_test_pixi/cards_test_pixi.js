@@ -8,6 +8,12 @@ let
 
 const CARD_WIDTH = 226 * 0.5;
 const CARD_HEIGHT = 314 * 0.5;
+const CARDS_COUNT = 20;
+const CARDS_IN_FAN = 15;
+const FAN_BLOAT = 8;
+const FAN_ARCHING = 50;
+const FAN_ANGLE_MIN = 10;
+const FAN_ANGLE_MAX = 30;
 
 // Do once on startup
 generateListOfCards();
@@ -203,13 +209,11 @@ function onAssetsLoaded() {
     function cardThrowComplete() {
         console.log('Throw ended');
 
-        if (currentCard < 2) {
+        if (currentCard < CARDS_COUNT) {
             currentCard++;
             cardThrowNew();
         } else {
             console.log('Game ended');
-            // Freeze the game (clear all pending animations)
-            tweenStopAll();
             cardThrow.interactive = false;
             toggleState();
         }
@@ -232,12 +236,53 @@ function onAssetsLoaded() {
         cs.alpha = 1.0;
         cs.x = cardThrow.x;
         cs.y = cardThrow.y;
-        cs.rotation = cardThrow.rotation;
+        cs.rotation = 0;
 
-        //todo: Tween card to hand
+        // Tween card to hand
+        handCardsRearrange();
 
         // Throw next card
         cardThrowComplete();
+    }
+
+    function handCardsRearrange() {
+        // Calculate position for each visible card
+        let cardsOnHand = [];
+        for (const c of cards) {
+            if ((c.hasOwnProperty('sprite'))) {
+                if (c.sprite.alpha === 1.0) {
+                    cardsOnHand.push(c);
+                }
+            }
+        }
+
+        let topFan = Math.floor((cardsOnHand.length - 1) / CARDS_IN_FAN);
+        let cntMin = (cardsOnHand.length - 1) % CARDS_IN_FAN + 1;
+
+        for (let i = 0; i < cardsOnHand.length; i++) {
+            const cs = cardsOnHand[i].sprite;
+            let fan = Math.floor(i / CARDS_IN_FAN);
+            let idx = i % CARDS_IN_FAN;
+
+            let cardsInFan = (fan === topFan) ? cntMin : CARDS_IN_FAN;
+            let cardCoef = idx - (cardsInFan - 1) / 2;
+
+            let cardsAngle = Math.min(150 / cardsInFan, FAN_ANGLE_MAX);
+            let fanSpacing = (app.screen.width / 1.5) / (topFan + 1);
+            let fanPlacement = app.screen.width / 2 + (fan - topFan / 2) * fanSpacing;
+
+            // Place cards in an arch (nicer looking fan)
+            let arch = cardsInFan > 2 ? Math.sin((1 - Math.abs(idx / (cardsInFan-1) * 2 - 1))) : 0;
+
+            let x = fanPlacement + cardCoef * FAN_BLOAT;
+            let y = app.screen.height * 0.99 - CARD_HEIGHT / 2 - (arch / CARDS_IN_FAN * (idx+1)) * FAN_ARCHING;
+            let r = cardCoef * cardsAngle;
+            r = r / 180 * Math.PI;
+
+            tweenTo(cs, 'x', x, 500, easeSquareRoot(), null, null);
+            tweenTo(cs, 'y', y, 500, easeSquareRoot(), null, null);
+            tweenTo(cs, 'rotation', r, 500, easeSquareRoot(), null, null);
+        }
     }
 }
 
@@ -261,9 +306,6 @@ function tweenTo(object, property, target, time, easing, onchange, oncomplete) {
 }
 function tweenStop(tween) {
     tweening.splice(tweening.indexOf(tween), 1);
-}
-function tweenStopAll() {
-    tweening.splice(0, tweening.length);
 }
 // Listen for animate update
 app.ticker.add((delta) => {
