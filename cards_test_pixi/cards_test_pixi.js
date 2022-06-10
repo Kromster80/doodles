@@ -1,19 +1,26 @@
 "use strict";
 
 // Global resource, meh
-let cards = [];
+let
+    cardBack = {name: 'back', url: 'https://deckofcardsapi.com/static/img/back.png'},
+    cards = [],
+    menuState = 0;
+
+const CARD_WIDTH = 226 * 0.5;
+const CARD_HEIGHT = 314 * 0.5;
 
 // Do once on startup
 generateListOfCards();
 function generateListOfCards() {
-    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '0', 'J', 'Q', 'K', 'A'];
+    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '0', 'J', 'Q', 'K'];
     const suits = ['C', 'D', 'H', 'S'];
-
-    cards.push({name: 'back', url: 'https://deckofcardsapi.com/static/img/back.png'});
 
     for (let i in ranks) {
         for (let k in suits) {
-            cards.push({name:ranks[i]+suits[k], url:'https://deckofcardsapi.com/static/img/'+ranks[i]+suits[k]+'.png'});
+            cards.push({
+                name: ranks[i] + suits[k],
+                url: 'https://deckofcardsapi.com/static/img/' + ranks[i] + suits[k] + '.png'
+            });
         }
     }
 }
@@ -22,155 +29,177 @@ const app = new PIXI.Application({ backgroundColor: 0x206020 });
 document.body.appendChild(app.view);
 
 app.loader
+    .add(cardBack)
     .add(cards)
-    .add('examples/assets/flowerTop.png', 'examples/assets/flowerTop.png')
-    .add('examples/assets/helmlok.png', 'examples/assets/helmlok.png')
-    .add('examples/assets/skully.png', 'examples/assets/skully.png')
     .load(onAssetsLoaded);
-
-const REEL_WIDTH = 160;
-const SYMBOL_SIZE = 150;
 
 
 // onAssetsLoaded handler builds the example.
 function onAssetsLoaded() {
-    // Create different slot symbols.
-    const slotTextures = [
-        PIXI.Texture.from('back'),
-        PIXI.Texture.from('examples/assets/flowerTop.png'),
-        PIXI.Texture.from('examples/assets/helmlok.png'),
-        PIXI.Texture.from('examples/assets/skully.png'),
-    ];
 
-    // Build the reels
-    const reels = [];
-    const reelContainer = new PIXI.Container();
-    for (let i = 0; i < 5; i++) {
-        const rc = new PIXI.Container();
-        rc.x = i * REEL_WIDTH;
-        reelContainer.addChild(rc);
-
-        const reel = {
-            container: rc,
-            symbols: [],
-            position: 0,
-            previousPosition: 0,
-            blur: new PIXI.filters.BlurFilter(),
-        };
-        reel.blur.blurX = 0;
-        reel.blur.blurY = 0;
-        rc.filters = [reel.blur];
-
-        // Build the symbols
-        for (let j = 0; j < 4; j++) {
-            const symbol = new PIXI.Sprite(slotTextures[Math.floor(Math.random() * slotTextures.length)]);
-            // Scale the symbol to fit symbol area.
-            symbol.y = j * SYMBOL_SIZE;
-            symbol.scale.x = symbol.scale.y = Math.min(SYMBOL_SIZE / symbol.width, SYMBOL_SIZE / symbol.height);
-            symbol.x = Math.round((SYMBOL_SIZE - symbol.width) / 2);
-            reel.symbols.push(symbol);
-            rc.addChild(symbol);
+    loadTextures();
+    function loadTextures() {
+        cardBack.texture = PIXI.Texture.from(cardBack.name);
+        for (let i in cards) {
+            cards[i].texture = PIXI.Texture.from(cards[i].name);
         }
-        reels.push(reel);
     }
-    app.stage.addChild(reelContainer);
 
-    // Build top & bottom covers and position reelContainer
-    const margin = (app.screen.height - SYMBOL_SIZE * 3) / 2;
-    reelContainer.y = margin;
-    reelContainer.x = Math.round(app.screen.width - REEL_WIDTH * 5);
-    const top = new PIXI.Graphics();
-    top.beginFill(0, 1);
-    top.drawRect(0, 0, app.screen.width, margin);
-    const bottom = new PIXI.Graphics();
-    bottom.beginFill(0, 1);
-    bottom.drawRect(0, SYMBOL_SIZE * 3 + margin, app.screen.width, margin);
+    const cardsContainer = createTable();
+    function createTable() {
+        let cc = new PIXI.Container();
+        cc.y = 0;
+        cc.x = 0;
+        app.stage.addChild(cc);
+        return cc;
+    }
 
-    // Add play text
-    const style = new PIXI.TextStyle({
-        fontFamily: 'Arial',
-        fontSize: 36,
-        fontStyle: 'italic',
-        fontWeight: 'bold',
-        fill: ['#ffffff', '#00ff99'], // gradient
-        stroke: '#4a1850',
-        strokeThickness: 5,
-        dropShadow: true,
-        dropShadowColor: '#000000',
-        dropShadowBlur: 4,
-        dropShadowAngle: Math.PI / 6,
-        dropShadowDistance: 6,
-        wordWrap: true,
-        wordWrapWidth: 440,
+    const cardThrow = createCard(cardBack.texture);
+    cardThrow.sprite.alpha = 0;
+    cardThrow.sprite.interactive = true;
+    cardThrow.sprite.on('mousedown', (event) => {
+        console.log('Tapped');
+        cardThrowCatch();
     });
 
-    const playText = new PIXI.Text('Spin the wheels!', style);
-    playText.x = Math.round((bottom.width - playText.width) / 2);
-    playText.y = app.screen.height - margin + Math.round((margin - playText.height) / 2);
-    bottom.addChild(playText);
+    function createCard(texture) {
+        let c = {};
+        c.sprite = new PIXI.Sprite(texture);
+        c.sprite.pivot.x = texture.width / 2;
+        c.sprite.pivot.y = texture.height / 2;
+        c.sprite.scale.x = CARD_WIDTH / texture.width;
+        c.sprite.scale.y = CARD_HEIGHT / texture.height;
+        c.sprite.x = app.screen.width / 2;
+        c.sprite.y = app.screen.height / 2;
+        cardsContainer.addChild(c.sprite);
+        return c;
+    }
 
-    // Add header text
-    const headerText = new PIXI.Text('PIXI MONSTER SLOTS!', style);
-    headerText.x = Math.round((top.width - headerText.width) / 2);
-    headerText.y = Math.round((margin - headerText.height) / 2);
-    top.addChild(headerText);
-
-    app.stage.addChild(top);
-    app.stage.addChild(bottom);
-
-    // Set the interactivity.
-    bottom.interactive = true;
-    bottom.buttonMode = true;
-    bottom.addListener('pointerdown', () => {
-        startPlay();
+    const popupText = createPlayText();
+    popupText.addListener('pointerdown', () => {
+        toggleState();
     });
 
-    let running = false;
+    function createPlayText() {
+        const style = new PIXI.TextStyle({
+            fontFamily: 'Arial',
+            fontSize: 36,
+            fontStyle: 'italic',
+            fontWeight: 'bold',
+            fill: ['#fff', '#f40'], // gradient
+            stroke: '#4a1850',
+            strokeThickness: 5,
+            dropShadow: true,
+            dropShadowColor: '#000000',
+            dropShadowBlur: 4,
+            dropShadowAngle: Math.PI / 6,
+            dropShadowDistance: 6,
+            wordWrap: true,
+            wordWrapWidth: 440,
+        });
+
+        let newText = new PIXI.Text('Start the game!', style);
+        newText.x = Math.round((app.screen.width - newText.width) / 2);
+        newText.y = Math.round((app.screen.height - newText.height) / 2);
+
+        newText.interactive = true;
+        newText.buttonMode = true;
+        newText.addListener('pointerover', () => {
+            newText.style.fill = ['#fff', '#f84'];
+        });
+        newText.addListener('pointerout', () => {
+            newText.style.fill = ['#fff', '#f40'];
+        });
+        app.stage.addChild(newText);
+
+        return newText;
+    }
+
+    let currentCard;
+
+    // Start right away
+    toggleState();
 
     // Function to start playing.
-    function startPlay() {
-        if (running) return;
-        running = true;
-
-        for (let i = 0; i < reels.length; i++) {
-            const r = reels[i];
-            const extra = Math.floor(Math.random() * 3);
-            const target = r.position + 10 + i * 5 + extra;
-            const time = 2500 + i * 600 + extra * 600;
-            tweenTo(r, 'position', target, time, backout(0.5), null, i === reels.length - 1 ? reelsComplete : null);
+    function toggleState() {
+        if (menuState === 0) {
+            // Start the game!
+            popupText.interactive = false;
+            tweenTo(popupText, 'alpha', 0, 500, easeSquareRoot(), null, gameStart);
+            menuState = 1;
+        } else
+        if (menuState === 1) {
+            // Game over!
+            popupText.text = 'Game over!';
+            popupText.interactive = true;
+            tweenTo(popupText, 'alpha', 1.0, 500, easeSquareRoot(), null, null);
+            menuState = 2;
+        } else
+        if (menuState === 2) {
+            popupText.text = 'Start the game!';
+            menuState = 0;
         }
     }
 
-    // Reels done handler.
-    function reelsComplete() {
-        running = false;
+    function gameStart() {
+        console.log('Game starts');
+
+        currentCard = 0;
+        cardThrowNew();
     }
 
-    // Listen for animate update.
-    app.ticker.add((delta) => {
-    // Update the slots.
-        for (let i = 0; i < reels.length; i++) {
-            const r = reels[i];
-            // Update blur filter y amount based on speed.
-            // This would be better if calculated with time in mind also. Now blur depends on frame rate.
-            r.blur.blurY = (r.position - r.previousPosition) * 8;
-            r.previousPosition = r.position;
+    function cardThrowNew() {
+        console.log('Throwing card ' + currentCard);
 
-            // Update symbol positions on reel.
-            for (let j = 0; j < r.symbols.length; j++) {
-                const s = r.symbols[j];
-                const prevy = s.y;
-                s.y = ((r.position + j) % r.symbols.length) * SYMBOL_SIZE - SYMBOL_SIZE;
-                if (s.y < 0 && prevy > SYMBOL_SIZE) {
-                    // Detect going over and swap a texture.
-                    // This should in proper product be determined from some logical reel.
-                    s.texture = slotTextures[Math.floor(Math.random() * slotTextures.length)];
-                    s.scale.x = s.scale.y = Math.min(SYMBOL_SIZE / s.texture.width, SYMBOL_SIZE / s.texture.height);
-                    s.x = Math.round((SYMBOL_SIZE - s.width) / 2);
-                }
-            }
+        cardThrow.sprite.alpha = 1.0;
+        cardThrow.sprite.interactive = true;
+        cardThrow.sprite.x = app.screen.width + CARD_WIDTH / 2;
+        cardThrow.sprite.y = lerp(CARD_HEIGHT/2, app.screen.height - CARD_HEIGHT/2, Math.random());
+
+        const tgtY = lerp(CARD_HEIGHT/2, app.screen.height - CARD_HEIGHT/2, Math.random());
+        const tgtRotation = lerp(-8, 8, Math.random());
+        const time = 3000 - currentCard * 50;
+        cardThrow.tweenX = tweenTo(cardThrow.sprite, 'x', -CARD_WIDTH / 2, time, easeLinear(), null, cardThrowComplete);
+        cardThrow.tweenY = tweenTo(cardThrow.sprite, 'y', tgtY, time, easeLinear(), null,null);
+        cardThrow.tweenR = tweenTo(cardThrow.sprite, 'rotation', tgtRotation, time, backout(0.5), null, null);
+    }
+
+    function cardThrowComplete() {
+        console.log('Throw ended');
+
+        if (currentCard < 3) {
+            currentCard++;
+            cardThrowNew();
+        } else {
+            console.log('Game ended');
+            // Freeze the game (clear all pending animations)
+            tweening.splice(0, tweening.length);
+            toggleState();
         }
-    });
+    }
+
+    function cardThrowCatch() {
+        // Stop any card tweens
+        tweenStop(cardThrow.tweenX);
+        tweenStop(cardThrow.tweenY);
+        tweenStop(cardThrow.tweenR);
+        cardThrow.sprite.alpha = 0;
+        cardThrow.sprite.interactive = false;
+
+        // Flip the card
+        let c = createCard(cards[currentCard].texture);
+        c.sprite.x = cardThrow.sprite.x;
+        c.sprite.y = cardThrow.sprite.y;
+        c.sprite.rotation = cardThrow.sprite.rotation;
+
+        // Make sure the thrown card is on top
+        cardsContainer.swapChildren(cardThrow.sprite, c.sprite);
+
+        // Tween card to hand
+
+        // Throw next card
+        cardThrowComplete();
+    }
 }
 
 // Very simple tweening utility function. This should be replaced with a proper tweening library in a real product.
@@ -190,6 +219,9 @@ function tweenTo(object, property, target, time, easing, onchange, oncomplete) {
 
     tweening.push(tween);
     return tween;
+}
+function tweenStop(tween) {
+    tweening.splice(tweening.indexOf(tween), 1);
 }
 // Listen for animate update.
 app.ticker.add((delta) => {
@@ -219,6 +251,13 @@ function lerp(a1, a2, t) {
 
 // Backout function from tweenjs.
 // https://github.com/CreateJS/TweenJS/blob/master/src/tweenjs/Ease.js
+function easeLinear() {
+    return (t) => (t);
+}
+function easeSquareRoot() {
+    return (t) => (Math.sqrt(t));
+}
+
 function backout(amount) {
-    return (t) => (--t * t * ((amount + 1) * t + amount) + 1);
+    return (t) => (Math.sqrt(t));
 }
