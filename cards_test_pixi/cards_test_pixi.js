@@ -15,11 +15,11 @@ function generateListOfCards() {
     const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '0', 'J', 'Q', 'K'];
     const suits = ['C', 'D', 'H', 'S'];
 
-    for (let i in ranks) {
-        for (let k in suits) {
+    for (const rank of ranks) {
+        for (const suit of suits) {
             cards.push({
-                name: ranks[i] + suits[k],
-                url: 'https://deckofcardsapi.com/static/img/' + ranks[i] + suits[k] + '.png'
+                name: rank + suit,
+                url: 'https://deckofcardsapi.com/static/img/' + rank + suit + '.png'
             });
         }
     }
@@ -40,8 +40,8 @@ function onAssetsLoaded() {
     loadTextures();
     function loadTextures() {
         cardBack.texture = PIXI.Texture.from(cardBack.name);
-        for (let i in cards) {
-            cards[i].texture = PIXI.Texture.from(cards[i].name);
+        for (const card of cards) {
+            card.texture = PIXI.Texture.from(card.name);
         }
     }
 
@@ -54,25 +54,24 @@ function onAssetsLoaded() {
         return cc;
     }
 
-    const cardThrow = createCard(cardBack.texture);
-    cardThrow.sprite.alpha = 0;
-    cardThrow.sprite.interactive = true;
-    cardThrow.sprite.on('mousedown', (event) => {
+    const cardThrow = createCardSprite(cardBack.texture);
+    cardThrow.alpha = 0;
+    cardThrow.interactive = true;
+    cardThrow.on('mousedown', (event) => {
         console.log('Tapped');
         cardThrowCatch();
     });
 
-    function createCard(texture) {
-        let c = {};
-        c.sprite = new PIXI.Sprite(texture);
-        c.sprite.pivot.x = texture.width / 2;
-        c.sprite.pivot.y = texture.height / 2;
-        c.sprite.scale.x = CARD_WIDTH / texture.width;
-        c.sprite.scale.y = CARD_HEIGHT / texture.height;
-        c.sprite.x = app.screen.width / 2;
-        c.sprite.y = app.screen.height / 2;
-        cardsContainer.addChild(c.sprite);
-        return c;
+    function createCardSprite(texture) {
+        let sprite = new PIXI.Sprite(texture);
+        sprite.pivot.x = texture.width / 2;
+        sprite.pivot.y = texture.height / 2;
+        sprite.scale.x = CARD_WIDTH / texture.width;
+        sprite.scale.y = CARD_HEIGHT / texture.height;
+        sprite.x = app.screen.width / 2;
+        sprite.y = app.screen.height / 2;
+        cardsContainer.addChild(sprite);
+        return sprite;
     }
 
     const popupText = createPlayText();
@@ -122,23 +121,55 @@ function onAssetsLoaded() {
 
     // Function to start playing.
     function toggleState() {
+        console.log('This state = ' + menuState + '. Next state');
+
         if (menuState === 0) {
-            // Start the game!
+            // Click on "Start the game"
             popupText.interactive = false;
-            tweenTo(popupText, 'alpha', 0, 500, easeSquareRoot(), null, gameStart);
+            tweenTo(popupText, 'alpha', 0.0, 500, easeSquareRoot(), null, gameStart);
             menuState = 1;
         } else
         if (menuState === 1) {
-            // Game over!
-            popupText.text = 'Game over!';
-            popupText.interactive = true;
-            tweenTo(popupText, 'alpha', 1.0, 500, easeSquareRoot(), null, null);
+            // Fade in "Game over"
+            popupText.text = 'Game over';
+            tweenTo(popupText, 'alpha', 1.0, 500, easeSquareRoot(), null, toggleState);
             menuState = 2;
         } else
         if (menuState === 2) {
+            // "Game over"
+            popupText.interactive = true;
+            menuState = 3;
+        } else
+        if (menuState === 3) {
+            // Click on "Game over"
+            popupText.interactive = false;
+
+            // Hide all existing cards
+            for (const card of cards) {
+                if (card.hasOwnProperty('sprite')) {
+                    tweenTo(card.sprite, 'alpha', 0.0, 500, easeSquareRoot(), null, null);
+                }
+            }
+            tweenTo(cardThrow, 'alpha', 0.0, 500, easeSquareRoot(), null, null);
+
+            tweenTo(popupText, 'alpha', 0.0, 500, easeSquareRoot(), null, toggleState);
+
+            menuState = 4;
+        } else
+        if (menuState === 4) {
             popupText.text = 'Start the game!';
+            tweenTo(popupText, 'alpha', 1.0, 500, easeSquareRoot(), null, toggleState);
+
+            menuState = 5;
+        } else
+        if (menuState === 5) {
+            // Old cards hidden
+            popupText.interactive = true;
+
             menuState = 0;
         }
+
+        console.log('New state = ' + menuState);
     }
 
     function gameStart() {
@@ -150,30 +181,36 @@ function onAssetsLoaded() {
 
     function cardThrowNew() {
         console.log('Throwing card ' + currentCard);
+        // Make sure the thrown card is on top
+        cardsContainer.removeChild(cardThrow);
+        cardsContainer.addChild(cardThrow);
 
-        cardThrow.sprite.alpha = 1.0;
-        cardThrow.sprite.interactive = true;
-        cardThrow.sprite.x = app.screen.width + CARD_WIDTH / 2;
-        cardThrow.sprite.y = lerp(CARD_HEIGHT/2, app.screen.height - CARD_HEIGHT/2, Math.random());
+        cardThrow.alpha = 1.0;
+        cardThrow.interactive = true;
+        cardThrow.x = app.screen.width + CARD_WIDTH / 2;
+        cardThrow.y = lerp(CARD_HEIGHT/2, app.screen.height - CARD_HEIGHT/2, Math.random());
 
         const tgtY = lerp(CARD_HEIGHT/2, app.screen.height - CARD_HEIGHT/2, Math.random());
-        const tgtRotation = lerp(-8, 8, Math.random());
+        const tgtRotation = lerp(-10, 10, Math.random());
         const time = 3000 - currentCard * 50;
-        cardThrow.tweenX = tweenTo(cardThrow.sprite, 'x', -CARD_WIDTH / 2, time, easeLinear(), null, cardThrowComplete);
-        cardThrow.tweenY = tweenTo(cardThrow.sprite, 'y', tgtY, time, easeLinear(), null,null);
-        cardThrow.tweenR = tweenTo(cardThrow.sprite, 'rotation', tgtRotation, time, backout(0.5), null, null);
+
+        // Remember tweens to cancel them on catch
+        cardThrow.tweenX = tweenTo(cardThrow, 'x', -CARD_WIDTH / 2, time, easeLinear(), null, cardThrowComplete);
+        cardThrow.tweenY = tweenTo(cardThrow, 'y', tgtY, time, easeLinear(), null,null);
+        cardThrow.tweenR = tweenTo(cardThrow, 'rotation', tgtRotation, time, easeSin2(), null, null);
     }
 
     function cardThrowComplete() {
         console.log('Throw ended');
 
-        if (currentCard < 3) {
+        if (currentCard < 2) {
             currentCard++;
             cardThrowNew();
         } else {
             console.log('Game ended');
             // Freeze the game (clear all pending animations)
-            tweening.splice(0, tweening.length);
+            tweenStopAll();
+            cardThrow.interactive = false;
             toggleState();
         }
     }
@@ -183,19 +220,21 @@ function onAssetsLoaded() {
         tweenStop(cardThrow.tweenX);
         tweenStop(cardThrow.tweenY);
         tweenStop(cardThrow.tweenR);
-        cardThrow.sprite.alpha = 0;
-        cardThrow.sprite.interactive = false;
+        cardThrow.alpha = 0;
+        cardThrow.interactive = false;
 
         // Flip the card
-        let c = createCard(cards[currentCard].texture);
-        c.sprite.x = cardThrow.sprite.x;
-        c.sprite.y = cardThrow.sprite.y;
-        c.sprite.rotation = cardThrow.sprite.rotation;
+        if (!(cards[currentCard].hasOwnProperty('sprite'))) {
+            cards[currentCard].sprite = createCardSprite(cards[currentCard].texture);
+        }
 
-        // Make sure the thrown card is on top
-        cardsContainer.swapChildren(cardThrow.sprite, c.sprite);
+        let cs = cards[currentCard].sprite;
+        cs.alpha = 1.0;
+        cs.x = cardThrow.x;
+        cs.y = cardThrow.y;
+        cs.rotation = cardThrow.rotation;
 
-        // Tween card to hand
+        //todo: Tween card to hand
 
         // Throw next card
         cardThrowComplete();
@@ -223,41 +262,37 @@ function tweenTo(object, property, target, time, easing, onchange, oncomplete) {
 function tweenStop(tween) {
     tweening.splice(tweening.indexOf(tween), 1);
 }
-// Listen for animate update.
+function tweenStopAll() {
+    tweening.splice(0, tweening.length);
+}
+// Listen for animate update
 app.ticker.add((delta) => {
     const now = Date.now();
-    const remove = [];
-    for (let i = 0; i < tweening.length; i++) {
-        const t = tweening[i];
+    for (const t of tweening) {
         const phase = Math.min(1, (now - t.start) / t.time);
 
         t.object[t.property] = lerp(t.propertyBeginValue, t.target, t.easing(phase));
         if (t.change) t.change(t);
         if (phase === 1) {
             t.object[t.property] = t.target;
+            tweening.splice(tweening.indexOf(t), 1);
+            // Call it last, cos it can reset all tweens
             if (t.complete) t.complete(t);
-            remove.push(t);
         }
-    }
-    for (let i = 0; i < remove.length; i++) {
-        tweening.splice(tweening.indexOf(remove[i]), 1);
     }
 });
 
-// Basic lerp funtion.
+// Basic lerp function
 function lerp(a1, a2, t) {
     return a1 * (1 - t) + a2 * t;
 }
 
-// Backout function from tweenjs.
-// https://github.com/CreateJS/TweenJS/blob/master/src/tweenjs/Ease.js
 function easeLinear() {
     return (t) => (t);
 }
 function easeSquareRoot() {
     return (t) => (Math.sqrt(t));
 }
-
-function backout(amount) {
-    return (t) => (Math.sqrt(t));
+function easeSin2() {
+    return (t) => (Math.sin(Math.sin(t)));
 }
