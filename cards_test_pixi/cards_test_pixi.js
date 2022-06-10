@@ -5,6 +5,7 @@ const URL_IMG = 'https://deckofcardsapi.com/static/img/';
 const URL_NEW_DECK = 'https://deckofcardsapi.com/api/deck/new/draw/?count=52';
 
 let menuState = 0;
+let cardCurrent;
 let cards = [];
 let cardsLookup = [];
 let cardsCaught = [];
@@ -130,8 +131,6 @@ function onAssetsLoaded() {
         return newText;
     }
 
-    let currentCard;
-
     // Start preparing right away
     toggleState();
     function toggleState() {
@@ -168,24 +167,21 @@ function onAssetsLoaded() {
         } else
         if (menuState === 5) {
             // Click on "Game over"
-            popupText.interactive = false;
 
             // Hide all existing cards
             for (const card of cards) {
-                if (card.hasOwnProperty('sprite')) {
-                    tweenTo(card.sprite, 'alpha', 0.0, 500, easeSquareRoot(), null, null);
-                }
+                tweenTo(card.sprite, 'alpha', 0.0, 500, easeSquareRoot(), null, null);
             }
             tweenTo(cardThrow, 'alpha', 0.0, 500, easeSquareRoot(), null, null);
-            tweenTo(popupText, 'alpha', 0.0, 500, easeSquareRoot(), null, toggleState);
 
+            popupText.interactive = false;
+            tweenTo(popupText, 'alpha', 0.0, 500, easeSquareRoot(), null, toggleState);
             menuState = 6;
         } else
         if (menuState === 6) {
             popupText.text = 'Loading ...';
             popupText.x = Math.round((app.screen.width - popupText.width) / 2);
             tweenTo(popupText, 'alpha', 1.0, 500, easeSquareRoot(), null, toggleState);
-
             menuState = 0;
         }
 
@@ -217,12 +213,12 @@ function onAssetsLoaded() {
     }
 
     function gameStart() {
-        currentCard = 0;
+        cardCurrent = 0;
         cardThrowNew();
     }
 
     function cardThrowNew() {
-        console.log('Throwing card #' + (currentCard+1));
+        console.log('Throwing card #' + (cardCurrent+1));
         // Make sure the thrown card is on top
         cardsContainer.removeChild(cardThrow);
         cardsContainer.addChild(cardThrow);
@@ -234,7 +230,7 @@ function onAssetsLoaded() {
 
         const tgtY = lerp(CARD_HEIGHT/2, app.screen.height - CARD_HEIGHT/2, Math.random());
         const tgtRotation = lerp(-10, 10, Math.random());
-        const time = THROW_LEN - currentCard * THROW_DEC;
+        const time = THROW_LEN - cardCurrent * THROW_DEC;
 
         // Remember tweens to cancel them on catch
         cardThrow.tweenX = tweenTo(cardThrow, 'x', -CARD_WIDTH / 2, time, easeLinear(), null, cardThrowComplete);
@@ -243,8 +239,8 @@ function onAssetsLoaded() {
     }
 
     function cardThrowComplete() {
-        if (currentCard < CARDS_COUNT-1) {
-            currentCard++;
+        if (cardCurrent < CARDS_COUNT-1) {
+            cardCurrent++;
             cardThrowNew();
         } else {
             console.log('Game ended');
@@ -255,8 +251,8 @@ function onAssetsLoaded() {
     }
 
     function cardThrowCatch() {
-        let card = cardsLookup[currentCard];
-        console.log('Caught card #' + currentCard + '. It is a ' + card.name);
+        let card = cardsLookup[cardCurrent];
+        console.log('Caught card #' + cardCurrent + '. It is a ' + card.name);
 
         cardsCaught.push(card);
 
@@ -287,9 +283,8 @@ function onAssetsLoaded() {
         cardThrowComplete();
     }
 
+    // Re-calculate position for each visible card
     function handCardsRearrange() {
-        // Calculate position for each visible card
-
         let topFan = Math.floor((cardsCaught.length - 1) / CARDS_IN_FAN);
         let cntMin = (cardsCaught.length - 1) % CARDS_IN_FAN + 1;
 
