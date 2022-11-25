@@ -5,11 +5,12 @@ uses
 
 type
   TForm1 = class(TForm)
-    Button1: TButton;
-    Button2: TButton;
+    btnExportOriginal: TButton;
+    btnExportEscaped: TButton;
+    Label1: TLabel;
     procedure FormCreate(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
+    procedure btnExportOriginalClick(Sender: TObject);
+    procedure btnExportEscapedClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
   private
     fStringList: TStringList;
@@ -55,23 +56,23 @@ begin
 end;
 
 
-procedure TForm1.Button1Click(Sender: TObject);
+procedure TForm1.btnExportOriginalClick(Sender: TObject);
 begin
   GetCombinations;
 
-  Button1.Caption := IntToStr(fStringList.Count);
+  btnExportOriginal.Caption := IntToStr(fStringList.Count);
 
   Clipboard.AsText := fStringList.Text;
 end;
 
 
-procedure TForm1.Button2Click(Sender: TObject);
+procedure TForm1.btnExportEscapedClick(Sender: TObject);
 var
   I: Integer;
 begin
   GetCombinations;
 
-  Button2.Caption := IntToStr(fStringList.Count);
+  btnExportEscaped.Caption := IntToStr(fStringList.Count);
 
   // Special wrapping
   for I := 0 to fStringList.Count - 1 do
