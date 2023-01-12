@@ -1,7 +1,5 @@
 unit Unit1;
-
 interface
-
 uses
   Windows, SysUtils, Forms, StdCtrls, Controls, FileCtrl, Graphics, Classes,
   ExtCtrls, Math;
@@ -19,21 +17,10 @@ type
     RadioGroup2: TRadioGroup;
     procedure LoadFile(Sender: TObject);
     procedure Redraw(Sender: TObject);
+  private
+    v: array [1 .. 1048576] of byte;
+    fDatasize: integer;
   end;
-
-
-var
-  Form1: TForm1;
-  f: file;
-  sizeH, sizeV: integer;
-  i, j, k: integer;
-  zoom: array [1 .. 5] of real = (0.25, 0.5, 1, 2, 4);
-  r, g, b: array [1 .. 1048576] of integer;
-  v: array [1 .. 1048576] of byte;
-  Bitm: TBitmap;
-  x: integer;
-  Datasize: integer;
-  s: string;
 
 
 implementation
@@ -41,29 +28,37 @@ implementation
 
 
 procedure TForm1.LoadFile(Sender: TObject);
+var
+  f: file;
 begin
   if not FileExists(FileListBox1.FileName) then
-    exit;
+    Exit;
+
   assignfile(f, FileListBox1.FileName);
   Filemode := 0;
   reset(f, 1);
   Filemode := 2;
-  blockread(f, v, 1048576, Datasize);
+  blockread(f, v, 1048576, fDatasize);
   closefile(f);
-  Redraw(Form1);
+
+  Redraw(nil);
 end;
 
 
 procedure TForm1.Redraw(Sender: TObject);
 var
+  i, j, k: integer;
   x, t: integer;
+  sizeH, sizeV: integer;
+  Bitm: TBitmap;
+  r, g, b: array [1 .. 1048576] of integer;
 begin
   sizeH := strtoint(ComboBox1.Text);
 
   // 1bit  Black&White
   if RadioGroup1.ItemIndex = 0 then
   begin
-    sizeV := min(Datasize div sizeH * 8 + 1, Image2.Height);
+    sizeV := min(fDatasize div sizeH * 8 + 1, Image2.Height);
     for i := 1 to sizeH * sizeV do
     begin
       for j := 0 to 7 do
@@ -83,7 +78,7 @@ begin
   // 4bit  GrayScale
   if RadioGroup1.ItemIndex = 1 then
   begin
-    sizeV := min(Datasize div sizeH * 2 + 1, Image2.Height);
+    sizeV := min(fDatasize div sizeH * 2 + 1, Image2.Height);
     i := sizeH * sizeV;
     repeat
       x := v[i];
@@ -112,7 +107,7 @@ begin
   // 8bit  GrayScale
   if RadioGroup1.ItemIndex = 2 then
   begin
-    sizeV := min(Datasize div sizeH + 1, Image2.Height);
+    sizeV := min(fDatasize div sizeH + 1, Image2.Height);
     if sizeV > Image2.Height then
       sizeV := Image2.Height;
     i := sizeH * sizeV;
@@ -127,7 +122,7 @@ begin
   // 15bit  5.5.5
   if RadioGroup1.ItemIndex = 3 then
   begin
-    sizeV := min(Datasize div sizeH div 2 + 1, Image2.Height);
+    sizeV := min(fDatasize div sizeH div 2 + 1, Image2.Height);
     i := sizeH * sizeV;
     repeat
       x := v[i * 2 - 1] + v[i * 2 - 0] * 256;
@@ -159,7 +154,7 @@ begin
   // 16bit  5.6.5
   if RadioGroup1.ItemIndex = 4 then
   begin
-    sizeV := min(Datasize div sizeH div 2 + 1, Image2.Height);
+    sizeV := min(fDatasize div sizeH div 2 + 1, Image2.Height);
     i := sizeH * sizeV;
     repeat
       x := v[i * 2 - 1] + v[i * 2 - 0] * 256;
@@ -191,7 +186,7 @@ begin
   // 24bit  8.8.8
   if RadioGroup1.ItemIndex = 5 then
   begin
-    sizeV := Datasize div sizeH div 3 + 1;
+    sizeV := fDatasize div sizeH div 3 + 1;
     i := sizeH * sizeV;
     repeat
       b[i] := v[i * 3 - 2];
@@ -204,7 +199,7 @@ begin
   // 32bit  8.8.8.0
   if RadioGroup1.ItemIndex = 6 then
   begin
-    sizeV := Datasize div sizeH div 4 + 1;
+    sizeV := fDatasize div sizeH div 4 + 1;
     i := sizeH * sizeV;
     repeat
       b[i] := v[i * 4 - 3];
