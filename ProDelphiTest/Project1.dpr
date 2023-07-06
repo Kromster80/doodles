@@ -3,7 +3,8 @@ program Project1;
 uses
   Vcl.Forms,
   Unit1 in 'Unit1.pas' {Form1},
-  {$IFDEF DESKTOP}  Utils in 'Utils.pas' {$ENDIF};
+  {$IFDEF DESKTOP}  Utils in 'Utils.pas' {$ENDIF},
+  {$IF Defined(DESKTOP) AND Defined(WDC)} Utils2 in 'Utils2.pas' {$ENDIF};
 
 {$R *.res}
 
