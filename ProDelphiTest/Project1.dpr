@@ -2,7 +2,8 @@ program Project1;
 {$I CompilerDirectives.inc}
 uses
   Vcl.Forms,
-  Unit1 in 'Unit1.pas' {Form1};
+  Unit1 in 'Unit1.pas' {Form1},
+  {$IFDEF DESKTOP}  Utils in 'Utils.pas' {$ENDIF};
 
 {$R *.res}
 

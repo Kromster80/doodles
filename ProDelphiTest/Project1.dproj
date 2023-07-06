@@ -105,6 +105,9 @@
         <DCCReference Include="Unit1.pas">
             <Form>Form1</Form>
         </DCCReference>
+        <DCCReference Include="Utils.pas">
+            <Form>$ENDIF</Form>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
