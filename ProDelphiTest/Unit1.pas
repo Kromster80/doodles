@@ -27,7 +27,7 @@ uses
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  Caption := 'Test' + REV;
+  Caption := 'Test' + REV1 + REV2;
 end;
 
 
