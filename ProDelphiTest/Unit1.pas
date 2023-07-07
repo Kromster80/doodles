@@ -19,12 +19,16 @@ var
   Form1: TForm1;
 
 implementation
+uses
+  Utils2;
 
 {$R *.dfm}
 
+
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  Caption := 'Test';
+  Caption := 'Test' + REV;
 end;
+
 
 end.
